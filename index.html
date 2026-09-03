@@ -198,6 +198,14 @@ details.faq p{padding:0 0 1.1rem;color:var(--muted);font-size:.92rem;font-weight
 .notice{border:1px dashed var(--line);border-radius:14px;padding:1.5rem;text-align:center;color:var(--muted);font-size:.9rem;background:var(--surface)}
 
 .dim-chip{display:inline-flex;align-items:center;gap:.4rem;margin-top:.45rem;padding:.3rem .7rem;border:1px solid var(--glow-dim);border-radius:999px;font-size:.84rem;font-weight:600;color:var(--glow);background:var(--glow-wash)}
+
+/* finger-sized tap targets on touch devices (44px Apple/Android guideline) */
+@media (pointer:coarse){
+  .btn-sm{padding:.75rem 1.2rem}
+  .chip,.dn-btn{padding:.65rem 1.1rem}
+  .qty button{width:34px;height:34px}
+  .icon-btn{width:44px;height:44px}
+}
 .modal-body .hint{display:block;margin-top:.5rem}
 
 /* size lineup + scenes */
