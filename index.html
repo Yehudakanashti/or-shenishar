@@ -197,6 +197,9 @@ details.faq p{padding:0 0 1.1rem;color:var(--muted);font-size:.92rem;font-weight
 
 .notice{border:1px dashed var(--line);border-radius:14px;padding:1.5rem;text-align:center;color:var(--muted);font-size:.9rem;background:var(--surface)}
 
+.dim-chip{display:inline-flex;align-items:center;gap:.4rem;margin-top:.45rem;padding:.3rem .7rem;border:1px solid var(--glow-dim);border-radius:999px;font-size:.84rem;font-weight:600;color:var(--glow);background:var(--glow-wash)}
+.modal-body .hint{display:block;margin-top:.5rem}
+
 /* size lineup + scenes */
 .wide-fig{margin:0;border-radius:16px;overflow:hidden;border:1px solid var(--line-soft);background:#0F0D0C}
 .wide-fig img{width:100%;display:block}
@@ -564,12 +567,19 @@ function drawModal(){
         <img src="${IMAGES[p.id+'_relief']}" alt="${p.name} כבוי" class="${night?'off':''}">
         <img src="${IMAGES[p.id+'_lit']}"    alt="${p.name} דולק" class="${night?'':'off'}">
         <div class="daynight mm-toggle">
-          <button class="dn-btn" data-dn="day"   aria-pressed="${!night}">יום</button>
-          <button class="dn-btn" data-dn="night" aria-pressed="${night}">לילה</button>
+          <button class="dn-btn" data-dn="day"   aria-pressed="${!night}">מודפס</button>
+          <button class="dn-btn" data-dn="night" aria-pressed="${night}">מואר</button>
         </div>
       </div>
       <div class="modal-body">
-        <div><h3>${p.name}</h3><span class="card-size">${p.size}</span></div>
+        <div>
+          <h3>${p.name}</h3>
+          <div class="dim-chip">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 3L3 21M21 3h-6M21 3v6M3 21h6M3 21v-6"/></svg>
+            מידות: ${p.size}
+          </div>
+          <span class="hint">"מודפס" — כך המוצר נראה ביום, כפי שיצא מההדפסה. "מואר" — כשהנר דולק.</span>
+        </div>
         <p style="color:var(--muted);font-size:.92rem;font-weight:300">${p.blurb}</p>
 
         <div class="opt-group">
