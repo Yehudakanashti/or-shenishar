@@ -13,16 +13,18 @@
    captions (room no. / name / dimensions). Single committed dark theme:
    the product is light inside darkness. */
 :root{
+  color-scheme:dark;
   --ground:#0B0908; --surface:#141009; --raise:#1D1710;
   --line:rgba(217,164,91,.22); --line-soft:rgba(217,164,91,.11);
-  --ink:#EFE6D3; --muted:#B3A68E; --faint:#7E7361;
+  --ink:#EFE6D3; --muted:#B3A68E; --faint:#8A7F6C;
   --glow:#D9A45B; --flame:#F3C67E; --glow-dim:#8A6534; --glow-wash:rgba(217,164,91,.07);
   --good:#9CBF9B; --bad:#D98878;
   --shadow:0 2px 6px rgba(0,0,0,.6),0 18px 48px rgba(0,0,0,.55);
   --halo:0 0 26px rgba(230,170,90,.24), 0 0 90px rgba(230,170,90,.10);
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-padding-top:84px}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 body{
   margin:0; direction:rtl; background:var(--ground); color:var(--ink);
   font-family:'Assistant',-apple-system,'Segoe UI',sans-serif;
@@ -44,6 +46,11 @@ a{color:inherit}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 .wrap{max-width:76rem;margin:0 auto;padding:0 1.5rem}
 .hint{font-size:.78rem;color:var(--faint)}
+::selection{background:var(--glow);color:#1A1206}
+*{scrollbar-width:thin;scrollbar-color:var(--glow-dim) var(--ground)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--ground)}
+::-webkit-scrollbar-thumb{background:var(--glow-dim);border-radius:5px;border:2px solid var(--ground)}
 
 .eyebrow{display:inline-flex;align-items:center;gap:.7rem;font-size:.7rem;letter-spacing:.34em;
   text-transform:uppercase;color:var(--glow);font-weight:600}
@@ -71,7 +78,7 @@ header.bar{position:sticky;top:0;z-index:60;background:rgba(11,9,8,.86);backdrop
   background:radial-gradient(50% 60% at 50% 100%, rgba(210,150,70,.10), transparent 70%);pointer-events:none}
 .hero-in{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(2rem,5vw,4.5rem);align-items:center}
 @media(max-width:860px){.hero-in{grid-template-columns:1fr;gap:2.6rem}}
-.hero h1{font-size:clamp(2.5rem,6vw,4.3rem);font-weight:700;letter-spacing:-.012em;margin:1.1rem 0 1.2rem;
+.hero h1{font-size:clamp(2.5rem,6vw,4.3rem);font-weight:500;letter-spacing:-.012em;margin:1.1rem 0 1.2rem;
   text-shadow:0 0 60px rgba(230,170,90,.12)}
 .hero .lede{font-size:clamp(1.02rem,1.7vw,1.18rem);color:var(--muted);max-width:36ch;font-weight:300;line-height:1.85}
 .hero-cta{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:2rem}
@@ -100,7 +107,7 @@ header.bar{position:sticky;top:0;z-index:60;background:rgba(11,9,8,.86);backdrop
 
 section{padding:clamp(3.2rem,6vw,5.5rem) 0;counter-increment:room}
 .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;margin-bottom:2.2rem}
-.sec-head .eyebrow::before{content:"אולם 0" counter(room);color:var(--faint);letter-spacing:.2em;margin-inline-end:.2rem}
+.sec-head .eyebrow::before{content:"אולם " counter(room, decimal-leading-zero);color:var(--faint);letter-spacing:.2em;margin-inline-end:.2rem}
 .sec-head h2{font-size:clamp(1.7rem,3.4vw,2.5rem);font-weight:700;margin-top:.7rem}
 .sec-head p{color:var(--muted);font-size:.95rem;margin-top:.5rem;max-width:52ch;font-weight:300}
 
@@ -116,8 +123,8 @@ section{padding:clamp(3.2rem,6vw,5.5rem) 0;counter-increment:room}
 .dn-btn[aria-pressed="true"]{background:var(--glow);color:#1A1206}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2.2rem 1.6rem}
-.card{position:relative;display:flex;flex-direction:column;background:none;border:none;
-  opacity:0;animation:lightUp .9s ease-out forwards;animation-delay:calc(.07s * var(--i,0))}
+.card{position:relative;display:flex;flex-direction:column;background:none;border:none;opacity:0;cursor:default}
+.card.lit{animation:lightUp .9s ease-out forwards;animation-delay:calc(.07s * var(--i,0))}
 @media (prefers-reduced-motion:reduce){.card{opacity:1;animation:none}}
 @keyframes lightUp{from{opacity:0;filter:brightness(.2)}to{opacity:1;filter:brightness(1)}}
 .card-media{position:relative;aspect-ratio:4/5;background:radial-gradient(60% 55% at 50% 42%, #171207, #0A0806 78%);
@@ -137,6 +144,7 @@ section{padding:clamp(3.2rem,6vw,5.5rem) 0;counter-increment:room}
 .card-size{font-size:.73rem;color:var(--faint);letter-spacing:.12em;font-variant-numeric:tabular-nums}
 .card-blurb{font-size:.86rem;color:var(--muted);font-weight:300;flex:1;margin-top:.3rem;line-height:1.65}
 .card-foot{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-top:.8rem}
+.card-foot .price{font-weight:500;font-size:1.05rem}
 .price{font-family:'David Libre',serif;font-weight:700;font-size:1.14rem;color:var(--flame);font-variant-numeric:tabular-nums}
 .price s{color:var(--faint);font-weight:400;font-size:.85rem;margin-inline-start:.4rem;font-family:'Assistant',sans-serif}
 
@@ -153,7 +161,7 @@ section{padding:clamp(3.2rem,6vw,5.5rem) 0;counter-increment:room}
 .modal-media img.off{opacity:0}
 .mm-toggle{position:absolute;bottom:.9rem;inset-inline-start:50%;transform:translateX(50%);z-index:3}
 .modal-body{padding:1.8rem 1.9rem 2rem;display:flex;flex-direction:column;gap:1rem}
-.modal-body h3{font-size:1.75rem;font-weight:700}
+.modal-body h3{font-size:1.75rem;font-weight:500}
 .dim-chip{display:inline-flex;align-items:center;gap:.45rem;margin-top:.5rem;padding:.32rem .75rem;
   border:1px solid var(--line);border-radius:2px;font-size:.8rem;font-weight:600;color:var(--flame);
   letter-spacing:.06em;font-variant-numeric:tabular-nums}
@@ -170,7 +178,7 @@ section{padding:clamp(3.2rem,6vw,5.5rem) 0;counter-increment:room}
 .opt small{color:var(--faint);font-size:.75rem}
 textarea,input,select{width:100%;padding:.72rem .85rem;border:1px solid var(--line-soft);border-radius:3px;
   background:var(--ground);color:var(--ink);font-family:inherit;font-size:.94rem;resize:vertical;transition:.2s}
-textarea:focus,input:focus,select:focus{outline:none;border-color:var(--glow);box-shadow:0 0 0 1px var(--glow-wash)}
+textarea:focus,input:focus,select:focus{outline:none;border-color:var(--glow);box-shadow:0 0 0 3px rgba(217,164,91,.22)}
 .close-x{position:absolute;top:.75rem;inset-inline-end:.75rem;z-index:5;width:38px;height:38px;border-radius:3px;
   background:var(--raise);border:1px solid var(--line-soft);display:grid;place-items:center;color:var(--muted)}
 .close-x:hover{color:var(--flame);border-color:var(--line)}
@@ -213,7 +221,7 @@ textarea:focus,input:focus,select:focus{outline:none;border-color:var(--glow);bo
 .feat-card p{font-size:.86rem;color:var(--muted);font-weight:300;line-height:1.7}
 
 details.faq{border-bottom:1px solid var(--line-soft);padding:.2rem 0}
-details.faq summary{padding:1.05rem 0;cursor:pointer;font-weight:600;font-size:1.02rem;list-style:none;
+details.faq summary{padding:1.05rem 0;cursor:pointer;font-weight:500;font-size:1.02rem;list-style:none;
   display:flex;justify-content:space-between;gap:1rem;align-items:center;font-family:'Frank Ruhl Libre',serif}
 details.faq summary::-webkit-details-marker{display:none}
 details.faq summary::after{content:"+";color:var(--glow);font-size:1.4rem;font-weight:300;transition:.2s}
@@ -257,15 +265,16 @@ details.faq p{padding:0 0 1.15rem;color:var(--muted);font-size:.92rem;font-weigh
 
 .rev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
 .rev{margin:0;padding:1.3rem 1.4rem;border:1px solid var(--line-soft);border-radius:4px;background:var(--surface)}
-.rev p{font-family:'David Libre',serif;font-size:1rem;color:var(--ink);margin-bottom:.6rem;line-height:1.75}
+.rev p{font-weight:500;font-family:'David Libre',serif;font-size:1rem;color:var(--ink);margin-bottom:.6rem;line-height:1.75}
 .rev footer{font-size:.78rem;color:var(--glow);font-weight:600;letter-spacing:.06em}
 
 .studio-grid{display:grid;grid-template-columns:minmax(300px,440px) 1fr;gap:2.4rem;align-items:start}
 @media(max-width:860px){.studio-grid{grid-template-columns:1fr}}
 .studio-canvas-wrap{position:sticky;top:80px}
 #stCanvas{width:100%;height:auto;border-radius:4px;background:#0A0806;border:1px solid var(--line-soft);
-  cursor:grab;touch-action:none;display:block;box-shadow:var(--shadow)}
+  cursor:grab;touch-action:pan-y;display:block;box-shadow:var(--shadow)}
 #stCanvas.dragging{cursor:grabbing}
+#stCanvas.has-img{touch-action:none}
 .st-toggle{position:relative;margin:.8rem auto 0;width:max-content}
 .studio-controls{display:flex;flex-direction:column;gap:1.5rem}
 .st-step{display:flex;gap:.95rem;align-items:flex-start}
@@ -294,6 +303,11 @@ footer a,footer p{font-size:.86rem;color:var(--muted);text-decoration:none;displ
 footer a:hover{color:var(--flame)}
 .legal{border-top:1px solid var(--line-soft);margin-top:2.2rem;padding-top:1.2rem;font-size:.76rem;color:var(--faint);
   display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;letter-spacing:.05em}
+
+.btn:active{transform:translateY(0) scale(.98);box-shadow:none}
+.btn-sm:active,.chip:active,.dn-btn:active{transform:scale(.96)}
+.opt:active,.ship-opt:active{background:var(--glow-wash)}
+.qty button:active{background:var(--raise)}
 
 @media (pointer:coarse){
   .btn-sm{padding:.8rem 1.25rem}
@@ -367,7 +381,7 @@ footer a:hover{color:var(--flame)}
             </label>
             <div class="st-row" id="stCropRow" hidden>
               <label class="st-lbl">קירוב</label>
-              <input type="range" id="stZoom" min="100" max="300" value="120">
+              <input type="range" id="stZoom" aria-label="קירוב התמונה" min="100" max="300" value="120">
             </div>
             <span class="hint" id="stDragHint" hidden>גררו את התמונה בתוך החלון כדי למקם את הפנים</span>
           </div>
@@ -377,10 +391,10 @@ footer a:hover{color:var(--flame)}
           <span class="st-n">2</span>
           <div class="st-body">
             <b>ההקדשה</b>
-            <input type="text" id="stText" maxlength="24" placeholder="לדוגמה: אני תמיד איתך" value="">
+            <input type="text" id="stText" aria-label="טקסט ההקדשה" maxlength="24" placeholder="לדוגמה: אני תמיד איתך" value="">
             <div class="st-row">
               <label class="st-lbl">גופן</label>
-              <select id="stFont">
+              <select id="stFont" aria-label="בחירת גופן">
                 <option value="'Frank Ruhl Libre', serif" selected>קלאסי</option>
                 <option value="'David Libre', serif">דוד</option>
                 <option value="'Noto Rashi Hebrew', serif">מסורתי</option>
@@ -402,7 +416,7 @@ footer a:hover{color:var(--flame)}
           <span class="st-n">3</span>
           <div class="st-body">
             <b>הדגם</b>
-            <select id="stModel"></select>
+            <select id="stModel" aria-label="בחירת דגם"></select>
             <div class="st-row" style="justify-content:space-between;align-items:center">
               <span class="price" id="stPrice"></span>
               <button class="btn btn-primary" id="stAdd">הוספה לסל</button>
@@ -456,19 +470,19 @@ footer a:hover{color:var(--flame)}
     <div class="works-grid">
       <figure>
         <img src="" data-img="work_stone1" alt="אבן זיכרון עם דיוקן צעיר — העבודה הראשונה" loading="lazy">
-        <figcaption><b>„אני תמיד איתך"</b><span>העבודה הראשונה שנוצרה</span></figcaption>
+        <figcaption><b>„אני תמיד איתך”</b><span>העבודה הראשונה שנוצרה</span></figcaption>
       </figure>
       <figure>
         <img src="" data-img="work_stone2" alt="אבן זיכרון — צילום אמיתי" loading="lazy">
-        <figcaption><b>„אני תמיד איתך"</b><span>תצלום אמיתי של האבן, מוארת</span></figcaption>
+        <figcaption><b>„אני תמיד איתך”</b><span>תצלום אמיתי של האבן, מוארת</span></figcaption>
       </figure>
       <figure>
         <img src="" data-img="work_stone3" alt="אבן זיכרון עם דיוקן אישה — הודפסה בפועל" loading="lazy">
-        <figcaption><b>„אני תמיד איתך"</b><span>נמסרה למשפחה</span></figcaption>
+        <figcaption><b>„אני תמיד איתך”</b><span>נמסרה למשפחה</span></figcaption>
       </figure>
       <figure>
         <img src="" data-img="work_stone4" alt="אבן זיכרון עם דיוקן גבר — הודפסה בפועל" loading="lazy">
-        <figcaption><b>„גאה בך תמיד"</b><span>נמסרה למשפחה</span></figcaption>
+        <figcaption><b>„גאה בך תמיד”</b><span>נמסרה למשפחה</span></figcaption>
       </figure>
     </div>
     <p class="hint" style="margin-top:1rem">ההקדשה חופשית — שם, תאריך, משפט אישי. אתם כותבים, אנחנו חוקקים.</p>
@@ -567,9 +581,9 @@ footer a:hover{color:var(--flame)}
       <p style="margin-inline:auto">כתבו לנו עם התמונה שחשבתם עליה ונגיד לכם בכנות אם היא תצא טוב — לפני שאתם מזמינים.</p>
     </div></div>
     <div class="form-grid">
-      <div class="field"><label>שם</label><input id="c_name"></div>
-      <div class="field"><label>טלפון</label><input id="c_phone" type="tel" inputmode="tel"></div>
-      <div class="field full"><label>במה נוכל לעזור?</label><textarea id="c_msg" rows="3" placeholder="שאלה על דגם, על התמונה, על זמני אספקה..."></textarea></div>
+      <div class="field"><label for="c_name">שם</label><input id="c_name"></div>
+      <div class="field"><label for="c_phone">טלפון</label><input id="c_phone" type="tel" inputmode="tel"></div>
+      <div class="field full"><label for="c_msg">במה נוכל לעזור?</label><textarea id="c_msg" rows="3" placeholder="שאלה על דגם, על התמונה, על זמני אספקה..."></textarea></div>
     </div>
     <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem">
       <button class="btn btn-primary" id="waBtn">
@@ -635,7 +649,7 @@ footer a:hover{color:var(--flame)}
   <div class="doc-body" id="docBody"></div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="ember" aria-hidden="true"></div>
 
 <script>
@@ -684,6 +698,30 @@ function renderGrid(){
       </div>
     </article>`).join('');
   $('#grid').querySelectorAll('[data-open]').forEach(b => b.onclick = () => openModal(b.dataset.open));
+  // whole exhibit is clickable (the hover halo promises it)
+  [...$('#grid').children].forEach((card,i) => {
+    const p = PRODUCTS[i];
+    if (p.power==='hold') return;
+    card.style.cursor = 'pointer';
+    card.onclick = e => { if (e.target.closest('[data-open]')) return; openModal(p.id); };
+  });
+  // candles light as the visitor reaches them, not while the room is empty
+  if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    const io = new IntersectionObserver(entries => {
+      let k = 0;
+      entries.forEach(en => { if (en.isIntersecting){
+        en.target.style.setProperty('--i', k++);
+        en.target.classList.add('lit');
+        io.unobserve(en.target);
+      }});
+    }, {threshold:.18});
+    [...$('#grid').children].forEach(c => io.observe(c));
+    // safety net: whatever happens with the observer, no card may stay dark.
+    // idempotent - cards already lit are unaffected; late adds still stagger.
+    setTimeout(() => [...$('#grid').children].forEach(c => c.classList.add('lit')), 5000);
+  } else {
+    [...$('#grid').children].forEach(c => c.classList.add('lit'));
+  }
 }
 function applyDayNight(){
   document.querySelectorAll('.card-media, .modal-media').forEach(m => {
@@ -804,6 +842,7 @@ function shipCost(){
 function paintCart(){
   const n = cart.reduce((s,l)=>s+l.qty,0);
   $('#cartCount').textContent = n;
+  $('#cartBtn').setAttribute('aria-label','סל הקניות — '+n+' פריטים');
   if (!cart.length){
     $('#drawerBody').innerHTML = '<div class="empty">הסל ריק.<br>בחרו דגם מהקטלוג כדי להתחיל.</div>';
     $('#drawerFoot').innerHTML = '';
@@ -848,19 +887,24 @@ function checkout(){
   $('#drawerTitle').textContent = 'פרטי משלוח';
   $('#drawerBody').innerHTML = `
     <div class="form-grid">
-      <div class="field full"><label>שם מלא *</label><input id="f_name" autocomplete="name"></div>
-      <div class="field"><label>טלפון *</label><input id="f_phone" type="tel" inputmode="tel" autocomplete="tel"></div>
-      <div class="field"><label>אימייל *</label><input id="f_mail" type="email" autocomplete="email"></div>
-      <div class="field"><label>עיר *</label><input id="f_city" autocomplete="address-level2"></div>
-      <div class="field"><label>רחוב *</label><input id="f_street" autocomplete="address-line1"></div>
-      <div class="field"><label>מס׳ בית *</label><input id="f_num"></div>
-      <div class="field"><label>קומה / דירה</label><input id="f_apt"></div>
-      <div class="field full"><label>הערות לשליח</label><textarea id="f_note" rows="2"></textarea></div>
+      <div class="field full"><label for="f_name">שם מלא *</label><input id="f_name" required autocomplete="name"></div>
+      <div class="field"><label for="f_phone">טלפון *</label><input id="f_phone" required type="tel" inputmode="tel" autocomplete="tel"></div>
+      <div class="field"><label for="f_mail">אימייל *</label><input id="f_mail" required type="email" autocomplete="email"></div>
+      <div class="field"><label for="f_city">עיר *</label><input id="f_city" required autocomplete="address-level2"></div>
+      <div class="field"><label for="f_street">רחוב *</label><input id="f_street" required autocomplete="address-line1"></div>
+      <div class="field"><label for="f_num">מס׳ בית *</label><input id="f_num" required></div>
+      <div class="field"><label for="f_apt">קומה / דירה</label><input id="f_apt"></div>
+      <div class="field full"><label for="f_note">הערות לשליח</label><textarea id="f_note" rows="2"></textarea></div>
     </div>
     <p class="hint" style="margin-top:.6rem">הפרטים משמשים למשלוח בלבד. התשלום עצמו מתבצע בעמוד מאובטח של ספק הסליקה — פרטי האשראי לא נשמרים כאן.</p>`;
+  const shipName = {courier:'שליח עד הבית',pickupPoint:'נקודת איסוף',selfPickup:'איסוף עצמי'}[shipMethod];
   $('#drawerFoot').innerHTML = `
+    <div class="sum"><span>משלוח · ${shipName}</span><span>${shipCost()?money(shipCost()):'חינם'}</span></div>
     <div class="sum total"><span>לתשלום</span><span>${money(subtotal()+shipCost())}</span></div>
-    <button class="btn btn-primary" id="payBtn">לתשלום מאובטח</button>
+    <button class="btn btn-primary" id="payBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      לתשלום מאובטח</button>
+    <span class="hint" style="text-align:center">הייצור מתחיל רק אחרי שתאשרו תצוגה מקדימה של האבן שלכם.</span>
     <button class="btn btn-ghost" id="backBtn">חזרה לסל</button>`;
   $('#backBtn').onclick = () => { $('#drawerTitle').textContent='הסל שלי'; paintCart(); };
   $('#payBtn').onclick = pay;
@@ -1036,7 +1080,7 @@ $('#mailBtn').onclick = () => {
   if (REVIEWS && REVIEWS.length){
     box.innerHTML = '<div class="rev-grid">' + REVIEWS.map(r=>`
       <blockquote class="rev">
-        <p>„${r.text}"</p>
+        <p>„${r.text}”</p>
         <footer>${r.name||'לקוח/ה'}${r.work? ' · '+r.work : ''}</footer>
       </blockquote>`).join('') + '</div>';
   } else {
@@ -1175,7 +1219,7 @@ renderGrid(); applyDayNight(); paintCart();
   $('#stFile').onchange = e => {
     const f = e.target.files && e.target.files[0]; if (!f) return;
     const img = new Image();
-    img.onload = () => { st.img = img; st.ix = 0; st.iy = 0; st.zoom = 1.2;
+    img.onload = () => { st.img = img; st.ix = 0; st.iy = 0; st.zoom = 1.2; cv.classList.add('has-img');
       $('#stZoom').value = 120; $('#stCropRow').hidden = false; $('#stDragHint').hidden = false;
       $('#stUploadText').textContent = 'החלפת תמונה'; draw(); };
     img.src = URL.createObjectURL(f);
