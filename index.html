@@ -4,7 +4,7 @@
 <title>אור שנשאר</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Assistant:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Assistant:wght@300;400;600;700&family=David+Libre:wght@500;700&family=Noto+Rashi+Hebrew:wght@600&display=swap" rel="stylesheet">
 
 <style>
 /* ── tokens ─────────────────────────────────────────────────────────────
@@ -216,6 +216,26 @@ details.faq p{padding:0 0 1.1rem;color:var(--muted);font-size:.92rem;font-weight
 .scene-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
 .scene-grid figcaption{padding:.7rem .9rem;font-size:.84rem;color:var(--muted);font-weight:300;background:var(--surface)}
 
+/* studio */
+.studio-grid{display:grid;grid-template-columns:minmax(300px,440px) 1fr;gap:2.2rem;align-items:start}
+@media(max-width:860px){.studio-grid{grid-template-columns:1fr}}
+.studio-canvas-wrap{position:sticky;top:80px}
+#stCanvas{width:100%;height:auto;border-radius:16px;background:#0F0D0C;border:1px solid var(--line-soft);cursor:grab;touch-action:none;display:block}
+#stCanvas.dragging{cursor:grabbing}
+.st-toggle{position:relative;margin:.8rem auto 0;width:max-content}
+.studio-controls{display:flex;flex-direction:column;gap:1.3rem}
+.st-step{display:flex;gap:.9rem;align-items:flex-start}
+.st-n{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--glow);color:var(--glow);display:grid;place-items:center;font-weight:700;font-size:.88rem}
+.st-body{flex:1;display:flex;flex-direction:column;gap:.6rem}
+.st-body>b{font-size:1.02rem}
+.st-upload{display:flex;align-items:center;gap:.6rem;padding:.85rem 1rem;border:1.5px dashed var(--line);border-radius:12px;cursor:pointer;color:var(--muted);font-size:.92rem;transition:.15s}
+.st-upload:hover{border-color:var(--glow);color:var(--glow)}
+.st-row{display:flex;gap:.7rem;align-items:center}
+.st-lbl{font-size:.8rem;font-weight:600;color:var(--muted);min-width:3.2rem}
+.st-row input[type=range]{flex:1;accent-color:var(--glow)}
+.st-glyph{font-size:.84rem}
+#stModel{font-size:.95rem}
+
 /* reviews */
 .rev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
 .rev{margin:0;padding:1.2rem 1.3rem;border:1px solid var(--line-soft);border-radius:14px;background:var(--surface)}
@@ -282,8 +302,8 @@ footer a:hover{color:var(--glow)}
       <h1>האור נשאר דולק,<br>גם כשכבר אין להבה.</h1>
       <p class="lede">אבן זיכרון שהתמונה שלכם חקוקה בתוכה. ביום היא תבליט שקט. בלילה, כשהנר נדלק — הפנים חוזרות.</p>
       <div class="hero-cta">
-        <button class="btn btn-primary" onclick="document.getElementById('catalog').scrollIntoView({behavior:'smooth'})">לבחירת דגם ורכישה</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">איך זה עובד</button>
+        <button class="btn btn-primary" onclick="document.getElementById('studio').scrollIntoView({behavior:'smooth'})">עצבו את האבן שלכם</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('catalog').scrollIntoView({behavior:'smooth'})">לקטלוג הדגמים</button>
       </div>
       <div class="trust">
         <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>משלוח מהיר לכל הארץ</span>
@@ -297,6 +317,84 @@ footer a:hover{color:var(--glow)}
     </div>
   </div>
 </div>
+
+<section id="studio" style="background:var(--surface);border-block:1px solid var(--line-soft)">
+  <div class="wrap">
+    <div class="sec-head"><div>
+      <span class="eyebrow">סטודיו אישי</span>
+      <h2>עצבו את האבן שלכם</h2>
+      <p>העלו תמונה, מקמו אותה בחלון, כתבו הקדשה — וראו את האבן שלכם עוד לפני ההזמנה.</p>
+    </div></div>
+
+    <div class="studio-grid">
+      <div class="studio-canvas-wrap">
+        <canvas id="stCanvas" width="440" height="640" aria-label="הדמיית האבן האישית"></canvas>
+        <div class="daynight st-toggle">
+          <button class="dn-btn" id="stDay" aria-pressed="false">ביום</button>
+          <button class="dn-btn" id="stNight" aria-pressed="true">מואר</button>
+        </div>
+        <p class="hint" style="text-align:center;margin-top:.6rem">הדמיה עקרונית. לפני הייצור תקבלו מאיתנו תצוגה מדויקת לאישור.</p>
+      </div>
+
+      <div class="studio-controls">
+        <div class="st-step">
+          <span class="st-n">1</span>
+          <div class="st-body">
+            <b>התמונה</b>
+            <label class="st-upload" id="stUploadLabel">
+              <input type="file" id="stFile" accept="image/*" hidden>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              <span id="stUploadText">בחירת תמונה מהמכשיר</span>
+            </label>
+            <div class="st-row" id="stCropRow" hidden>
+              <label class="st-lbl">קירוב</label>
+              <input type="range" id="stZoom" min="100" max="300" value="120">
+            </div>
+            <span class="hint" id="stDragHint" hidden>גררו את התמונה בתוך החלון כדי למקם את הפנים</span>
+          </div>
+        </div>
+
+        <div class="st-step">
+          <span class="st-n">2</span>
+          <div class="st-body">
+            <b>ההקדשה</b>
+            <input type="text" id="stText" maxlength="24" placeholder="לדוגמה: אני תמיד איתך" value="">
+            <div class="st-row">
+              <label class="st-lbl">גופן</label>
+              <select id="stFont">
+                <option value="'Frank Ruhl Libre', serif" selected>קלאסי</option>
+                <option value="'David Libre', serif">דוד</option>
+                <option value="'Noto Rashi Hebrew', serif">מסורתי</option>
+                <option value="'Assistant', sans-serif">נקי</option>
+              </select>
+            </div>
+            <div class="st-row">
+              <label class="st-lbl">סמל</label>
+              <div class="opt-row" style="gap:.4rem">
+                <button class="chip st-glyph" data-g="heart" aria-pressed="true">♥ לב</button>
+                <button class="chip st-glyph" data-g="star" aria-pressed="false">✡ מגן דוד</button>
+                <button class="chip st-glyph" data-g="none" aria-pressed="false">בלי</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="st-step">
+          <span class="st-n">3</span>
+          <div class="st-body">
+            <b>הדגם</b>
+            <select id="stModel"></select>
+            <div class="st-row" style="justify-content:space-between;align-items:center">
+              <span class="price" id="stPrice"></span>
+              <button class="btn btn-primary" id="stAdd">הוספה לסל</button>
+            </div>
+            <span class="hint">התשלום מתבצע בעמוד מאובטח של ספק הסליקה. את התמונה עצמה תשלחו אלינו אחרי ההזמנה, ותקבלו תצוגה לאישור לפני הייצור.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section id="catalog">
   <div class="wrap">
@@ -940,4 +1038,170 @@ $('#mailBtn').onclick = () => {
 })();
 
 renderGrid(); applyDayNight(); paintCart();
+
+/* ================= personal design studio =================
+   Everything is local: the photo never leaves the browser. Payment stays on
+   the processor's secure page; the photo is sent after ordering, per the
+   4-step flow, and a human-made proof is approved before production. */
+(function(){
+  const cv = $('#stCanvas'), ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const st = { img:null, ix:0, iy:0, zoom:1.2, text:'', font:"'Frank Ruhl Libre', serif",
+               glyph:'heart', night:true, model:null };
+
+  // sellable models only (not held); default to the flagship
+  const sellable = PRODUCTS.filter(p => p.power!=='hold' && p.power!=='accessory');
+  $('#stModel').innerHTML = sellable.map(p =>
+    `<option value="${p.id}" ${p.id==='large'?'selected':''}>${p.name} · ${p.size}</option>`).join('');
+  st.model = sellable.find(p=>p.id==='large') || sellable[0];
+
+  // deterministic torn top edge (same every render)
+  const torn = []; let seed = 7;
+  const rnd = () => (seed = (seed*16807)%2147483647) / 2147483647;
+  for (let i=0;i<=24;i++) torn.push(rnd());
+
+  function stonePath(){
+    const m = 26, top = 44, bot = H-20;
+    ctx.beginPath();
+    ctx.moveTo(m, bot);
+    ctx.lineTo(m, top+26);
+    for (let i=0;i<=24;i++){
+      const x = m + (W-2*m)*(i/24);
+      const y = top + torn[i]*26 - (i===0?8:0);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(W-m, bot);
+    ctx.quadraticCurveTo(W-m, bot+12, W-m-14, bot+12);
+    ctx.lineTo(m+14, bot+12);
+    ctx.quadraticCurveTo(m, bot+12, m, bot);
+    ctx.closePath();
+  }
+
+  const CIRC = { x: W/2, y: H*0.34, r: W*0.285 };
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // vitrine ground
+    ctx.fillStyle = '#0F0D0C'; ctx.fillRect(0,0,W,H);
+
+    // stone body
+    ctx.save(); stonePath(); ctx.clip();
+    if (st.night){
+      const g = ctx.createRadialGradient(W/2,H*0.45,40, W/2,H*0.55,H*0.75);
+      g.addColorStop(0,'#EFC078'); g.addColorStop(.55,'#C89858'); g.addColorStop(1,'#6E4E22');
+      ctx.fillStyle = g;
+    } else {
+      ctx.fillStyle = '#E7DFCB';
+    }
+    ctx.fillRect(0,0,W,H);
+    // subtle grain
+    ctx.globalAlpha = st.night? .05 : .07;
+    for (let i=0;i<420;i++){ ctx.fillStyle = i%2?'#000':'#fff';
+      ctx.fillRect(Math.random()*W, Math.random()*H, 1.3, 1.3); }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // photo window
+    ctx.save();
+    ctx.beginPath(); ctx.arc(CIRC.x, CIRC.y, CIRC.r, 0, Math.PI*2); ctx.clip();
+    if (st.img){
+      const base = Math.max((CIRC.r*2)/st.img.width, (CIRC.r*2)/st.img.height) * st.zoom;
+      const dw = st.img.width*base, dh = st.img.height*base;
+      ctx.filter = 'grayscale(1) contrast(1.06)';
+      ctx.drawImage(st.img, CIRC.x - dw/2 + st.ix, CIRC.y - dh/2 + st.iy, dw, dh);
+      ctx.filter = 'none';
+      // amber lithophane tint
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = st.night ? '#E2A95F' : '#B8A98C';
+      ctx.fillRect(CIRC.x-CIRC.r, CIRC.y-CIRC.r, CIRC.r*2, CIRC.r*2);
+      if (st.night){
+        ctx.globalCompositeOperation = 'soft-light';
+        const pg = ctx.createRadialGradient(CIRC.x,CIRC.y,10, CIRC.x,CIRC.y,CIRC.r);
+        pg.addColorStop(0,'#FFE2AC'); pg.addColorStop(1,'#00000000');
+        ctx.fillStyle = pg; ctx.fillRect(CIRC.x-CIRC.r, CIRC.y-CIRC.r, CIRC.r*2, CIRC.r*2);
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    } else {
+      ctx.fillStyle = st.night? '#8A6631' : '#CBBF9F';
+      ctx.fillRect(CIRC.x-CIRC.r, CIRC.y-CIRC.r, CIRC.r*2, CIRC.r*2);
+      ctx.fillStyle = st.night? '#5E4319' : '#8F8368';
+      ctx.font = '15px Assistant'; ctx.textAlign='center';
+      ctx.fillText('התמונה שלכם כאן', CIRC.x, CIRC.y+5);
+    }
+    ctx.restore();
+    // window rim
+    ctx.beginPath(); ctx.arc(CIRC.x, CIRC.y, CIRC.r+1, 0, Math.PI*2);
+    ctx.lineWidth = 3; ctx.strokeStyle = st.night? 'rgba(60,38,10,.55)':'rgba(90,75,50,.5)'; ctx.stroke();
+
+    // dedication (engraved = darker than body)
+    const inkTxt = st.night? '#6B4A1A' : '#8A7A57';
+    if (st.text){
+      ctx.fillStyle = inkTxt; ctx.textAlign = 'center';
+      ctx.font = '700 34px ' + st.font;
+      ctx.fillText(st.text, W/2, H*0.735, W*0.74);
+    }
+    if (st.glyph !== 'none'){
+      ctx.fillStyle = inkTxt; ctx.textAlign='center';
+      ctx.font = '30px serif';
+      ctx.fillText(st.glyph==='heart' ? '♥' : '✡', W/2, H*0.845);
+    }
+  }
+
+  // photo load
+  $('#stFile').onchange = e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    const img = new Image();
+    img.onload = () => { st.img = img; st.ix = 0; st.iy = 0; st.zoom = 1.2;
+      $('#stZoom').value = 120; $('#stCropRow').hidden = false; $('#stDragHint').hidden = false;
+      $('#stUploadText').textContent = 'החלפת תמונה'; draw(); };
+    img.src = URL.createObjectURL(f);
+  };
+  // crop: drag to position
+  let drag = null;
+  const px = ev => { const r = cv.getBoundingClientRect();
+    const t = ev.touches? ev.touches[0] : ev;
+    return { x: (t.clientX-r.left) * (W/r.width), y: (t.clientY-r.top) * (H/r.height) }; };
+  const down = ev => { if(!st.img) return; drag = { p: px(ev), ix: st.ix, iy: st.iy };
+    cv.classList.add('dragging'); ev.preventDefault(); };
+  const move = ev => { if(!drag) return; const p = px(ev);
+    st.ix = drag.ix + (p.x-drag.p.x); st.iy = drag.iy + (p.y-drag.p.y); draw(); ev.preventDefault(); };
+  const up = () => { drag = null; cv.classList.remove('dragging'); };
+  cv.addEventListener('pointerdown', down); window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', up);
+  $('#stZoom').oninput = e => { st.zoom = e.target.value/100; draw(); };
+
+  // text / font / glyph
+  $('#stText').oninput = e => { st.text = e.target.value; draw(); };
+  $('#stFont').onchange = e => { st.font = e.target.value; draw(); };
+  document.querySelectorAll('.st-glyph').forEach(b => b.onclick = () => {
+    st.glyph = b.dataset.g;
+    document.querySelectorAll('.st-glyph').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+    draw();
+  });
+  // day/night
+  $('#stDay').onclick  = () => { st.night=false; syncTog(); draw(); };
+  $('#stNight').onclick= () => { st.night=true;  syncTog(); draw(); };
+  const syncTog = () => { $('#stDay').setAttribute('aria-pressed',String(!st.night));
+                          $('#stNight').setAttribute('aria-pressed',String(st.night)); };
+  // model + price
+  const paintPrice = () => { $('#stPrice').textContent = money(st.model.price); };
+  $('#stModel').onchange = e => { st.model = sellable.find(p=>p.id===e.target.value); paintPrice(); };
+  paintPrice();
+
+  // add to cart: dedication + font carried on the order line
+  $('#stAdd').onclick = () => {
+    if (!st.img){ toast('העלו תמונה כדי להשלים את העיצוב'); $('#stUploadLabel').scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    const fontName = $('#stFont').selectedOptions[0].textContent;
+    const parts = [];
+    if (st.text) parts.push('כיתוב: "'+st.text+'"');
+    parts.push('גופן: '+fontName);
+    if (st.glyph!=='none') parts.push('סמל: '+(st.glyph==='heart'?'לב':'מגן דוד'));
+    addToCart(st.model, 'battery', parts.join(' · '));
+    openDrawer();
+  };
+
+  // redraw once fonts are ready so the engraved text uses the real face
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  draw();
+})();
 </script>
