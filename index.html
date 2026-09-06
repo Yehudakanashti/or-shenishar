@@ -1280,7 +1280,27 @@ renderGrid(); applyDayNight(); paintCart();
     ctx.bezierCurveTo(cx-w, top+rise*0.62, cx-w*0.30, top+rise*0.31, cx, top);
     ctx.closePath();
   }
-  function flamePath(){ ctx.beginPath(); teardropSub(W/2, H*0.055, H-18, W*0.42); }
+  // the exact production half-width curve (make_variants3.flame_half):
+  // straight foot below u=0.13, widest ~34% up, clean small top
+  function flameHalf(u){
+    if (u > 0.985) return 0;
+    const c = Math.min(Math.max(u, 0.13), 0.985);
+    return Math.pow(Math.sin(Math.PI * Math.pow(c, 0.65)), 0.85);
+  }
+  function trueFlameSub(cx, top, bot, A){
+    const rise = bot - top, N = 44;
+    ctx.moveTo(cx, top);
+    for (let i = N; i >= 0; i--){
+      const u = i / N;
+      ctx.lineTo(cx + A * flameHalf(u), bot - u * rise);
+    }
+    for (let i = 0; i <= N; i++){
+      const u = i / N;
+      ctx.lineTo(cx - A * flameHalf(u), bot - u * rise);
+    }
+    ctx.closePath();
+  }
+  function flamePath(){ ctx.beginPath(); trueFlameSub(W/2, H*0.055, H-18, W*0.29); }
   function archTopPath(){
     const mm=30, bot=H-20, shoulder=H*0.30;
     ctx.beginPath();
@@ -1302,11 +1322,11 @@ renderGrid(); applyDayNight(); paintCart();
     ctx.lineTo(W-mm, bot);
     ctx.closePath();
   }
-  function flameSlimPath(){ ctx.beginPath(); teardropSub(W/2, H*0.03, H-18, W*0.26); }
+  function flameSlimPath(){ ctx.beginPath(); trueFlameSub(W/2, H*0.03, H-18, W*0.215); }
   function flameTwinPath(){
     ctx.beginPath();
-    teardropSub(W*0.63, H*0.06, H-18, W*0.215);
-    teardropSub(W*0.30, H*0.40, H-18, W*0.16);
+    trueFlameSub(W*0.63, H*0.06, H-18, W*0.23);
+    trueFlameSub(W*0.30, H*0.40, H-18, W*0.16);
   }
   function candlePath(){
     // one continuous shell, like the real piece: the body narrows to a waist
@@ -1375,11 +1395,11 @@ renderGrid(); applyDayNight(); paintCart();
     plain:{ path:plainPath, win:{x:W/2, y:H*0.335, r:W*0.275}, textY:H*0.735, glyphY:H*0.845, topY:52, span:568, tdef:34, baseY:H-20, baseW:190 },
     heart:{ path:heartPath, win:{x:W/2, y:H*0.40, r:W*0.235}, textY:H*0.615, glyphY:0, topY:H*0.14, span:317, tdef:28 },
     circle:{ path:circlePath, win:{x:W/2, y:H*0.42, r:W*0.26}, textY:H*0.665, glyphY:H*0.755, topY:H*0.5-W*0.455, span:582, tdef:32, baseY:H*0.5+W*0.455, baseW:96 },
-    flame:{ path:flamePath, win:{x:W/2, y:H*0.46, r:W*0.215}, textY:H*0.72, glyphY:H*0.82, topY:H*0.055, span:587, tdef:30, baseY:H-18, baseW:104 },
-    flameslim:{ path:flameSlimPath, win:{x:W/2, y:H*0.44, r:W*0.15}, textY:H*0.71, glyphY:H*0.79, topY:H*0.03, span:603, tdef:24, baseY:H-18, baseW:63 },
+    flame:{ path:flamePath, win:{x:W/2, y:H*0.50, r:W*0.20}, textY:H*0.73, glyphY:H*0.855, topY:H*0.055, span:587, tdef:30, baseY:H-18, baseW:150 },
+    flameslim:{ path:flameSlimPath, win:{x:W/2, y:H*0.49, r:W*0.135}, textY:H*0.72, glyphY:H*0.84, topY:H*0.03, span:603, tdef:24, baseY:H-18, baseW:92 },
     candle:{ path:candlePath, win:{x:W/2, y:H*0.735, r:W*0.15}, textY:H*0.885, glyphY:0, wick:true, topY:H*0.04, span:596, tdef:24, baseY:H-18, baseW:88 },
     flametwin:{ path:flameTwinPath, win:{x:W*0.63, y:H*0.40, r:W*0.135}, textX:W*0.63, tscale:0.72,
-      textY:H*0.68, glyphY:0, emboss:{x:W*0.30, y:H*0.66}, topY:H*0.06, topX:W*0.63, span:584, tdef:26, baseY:H-18, baseW:120 },
+      textY:H*0.70, glyphY:0, emboss:{x:W*0.30, y:H*0.68}, topY:H*0.06, topX:W*0.63, span:584, tdef:26, baseY:H-18, baseW:130 },
     wall:{ path:wallPath, win:{x:W/2, y:H*0.40, r:W*0.19}, textY:H*0.76, glyphY:H*0.845, bricks:true, topY:H*0.17, span:513, tdef:30, baseY:H-18, baseW:190 },
     book:{ path:bookPath, win:{x:W*0.73, y:H*0.465, r:W*0.165}, textY:H*0.44, glyphY:H*0.62, textX:W*0.27, tscale:0.78, spine:true, topY:H*0.20, span:371, tdef:34 },
     couple:{ path:coupleWidePath, win:{x:W*0.69, y:H*0.47, r:W*0.185}, win2:{x:W*0.31, y:H*0.47, r:W*0.185}, textY:H*0.80, glyphY:H*0.88, topY:H*0.25, span:460, tdef:30, baseY:H-8, baseW:208 },
