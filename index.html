@@ -1301,33 +1301,50 @@ renderGrid(); applyDayNight(); paintCart();
     teardropSub(W*0.30, H*0.40, H-18, W*0.16);
   }
   function candlePath(){
-    const hw=W*0.20, top=H*0.30, bot=H-18, r=14;
+    // one continuous shell, like the real piece: the body narrows to a waist
+    // and flows into the flame point - light travels the whole way up
+    const cx=W/2, tip=H*0.04, bot=H-18;
+    const fw=W*0.168, ww=W*0.123, bw=W*0.20;
     ctx.beginPath();
-    // candle body, rounded shoulders
-    ctx.moveTo(W/2-hw, bot);
-    ctx.lineTo(W/2-hw, top+r);
-    ctx.quadraticCurveTo(W/2-hw, top, W/2-hw+r, top);
-    ctx.lineTo(W/2+hw-r, top);
-    ctx.quadraticCurveTo(W/2+hw, top, W/2+hw, top+r);
-    ctx.lineTo(W/2+hw, bot);
+    ctx.moveTo(cx, tip);
+    ctx.bezierCurveTo(cx+fw*0.55, H*0.10, cx+fw, H*0.20, cx+fw, H*0.28);
+    ctx.bezierCurveTo(cx+fw, H*0.38, cx+ww, H*0.46, cx+ww, H*0.55);
+    ctx.bezierCurveTo(cx+ww, H*0.62, cx+bw, H*0.64, cx+bw, H*0.70);
+    ctx.lineTo(cx+bw, bot);
+    ctx.lineTo(cx-bw, bot);
+    ctx.lineTo(cx-bw, H*0.70);
+    ctx.bezierCurveTo(cx-bw, H*0.64, cx-ww, H*0.62, cx-ww, H*0.55);
+    ctx.bezierCurveTo(cx-ww, H*0.46, cx-fw, H*0.38, cx-fw, H*0.28);
+    ctx.bezierCurveTo(cx-fw, H*0.20, cx-fw*0.55, H*0.10, cx, tip);
     ctx.closePath();
-    // the flame above the wick
-    teardropSub(W/2, H*0.055, H*0.275, W*0.115);
   }
   function wallPath(){
-    const m=30, top=H*0.17, bot=H-18, teeth=5, th=22;
-    const tw = (W-2*m)/(teeth*2-1);
+    // torn top edge like the real piece, not battlements
+    const m=30, top=H*0.17, bot=H-18;
     ctx.beginPath();
     ctx.moveTo(m, bot);
-    ctx.lineTo(m, top);
-    let x = m;
-    for (let i=0;i<teeth;i++){
-      ctx.lineTo(x, top); ctx.lineTo(x+tw, top);
-      if (i < teeth-1){ ctx.lineTo(x+tw, top+th); ctx.lineTo(x+tw*2, top+th); }
-      x += tw*2;
+    ctx.lineTo(m, top+20);
+    for (let i=0;i<=24;i++){
+      const x = m + (W-2*m)*(i/24);
+      ctx.lineTo(x, top + torn[i]*22 - (i===0?6:0));
     }
-    ctx.lineTo(W-m, top);
     ctx.lineTo(W-m, bot);
+    ctx.closePath();
+  }
+  function coupleWidePath(){
+    // the couple stone is wider and shorter than the single tablets
+    const m=12, top=H*0.25, bot=H-20;
+    ctx.beginPath();
+    ctx.moveTo(m, bot);
+    ctx.lineTo(m, top+24);
+    for (let i=0;i<=24;i++){
+      const x = m + (W-2*m)*(i/24);
+      ctx.lineTo(x, top + torn[i]*24 - (i===0?7:0));
+    }
+    ctx.lineTo(W-m, bot);
+    ctx.quadraticCurveTo(W-m, bot+12, W-m-14, bot+12);
+    ctx.lineTo(m+14, bot+12);
+    ctx.quadraticCurveTo(m, bot+12, m, bot);
     ctx.closePath();
   }
   function bookPath(){
@@ -1352,12 +1369,12 @@ renderGrid(); applyDayNight(); paintCart();
     circle:{ path:circlePath, win:{x:W/2, y:H*0.42, r:W*0.26}, textY:H*0.665, glyphY:H*0.755, span:582, tdef:32, baseY:H*0.5+W*0.455, baseW:96 },
     flame:{ path:flamePath, win:{x:W/2, y:H*0.46, r:W*0.215}, textY:H*0.72, glyphY:H*0.82, span:587, tdef:30, baseY:H-18, baseW:104 },
     flameslim:{ path:flameSlimPath, win:{x:W/2, y:H*0.44, r:W*0.15}, textY:H*0.71, glyphY:H*0.79, span:603, tdef:24, baseY:H-18, baseW:63 },
-    candle:{ path:candlePath, win:{x:W/2, y:H*0.50, r:W*0.155}, textY:H*0.74, glyphY:H*0.82, span:587, tdef:26, baseY:H-18, baseW:88 },
+    candle:{ path:candlePath, win:{x:W/2, y:H*0.735, r:W*0.15}, textY:H*0.885, glyphY:0, wick:true, span:596, tdef:24, baseY:H-18, baseW:88 },
     flametwin:{ path:flameTwinPath, win:{x:W*0.63, y:H*0.40, r:W*0.135}, textX:W*0.63, tscale:0.72,
       textY:H*0.68, glyphY:0, emboss:{x:W*0.30, y:H*0.66}, span:584, tdef:26, baseY:H-18, baseW:120 },
     wall:{ path:wallPath, win:{x:W/2, y:H*0.40, r:W*0.19}, textY:H*0.76, glyphY:H*0.845, bricks:true, span:513, tdef:30, baseY:H-18, baseW:190 },
     book:{ path:bookPath, win:{x:W*0.73, y:H*0.465, r:W*0.165}, textY:H*0.44, glyphY:H*0.62, textX:W*0.27, tscale:0.78, spine:true, span:371, tdef:34 },
-    couple:{ path:tabletPath, win:{x:W*0.69, y:H*0.30, r:W*0.185}, win2:{x:W*0.31, y:H*0.30, r:W*0.185}, textY:H*0.66, glyphY:H*0.77, span:588, tdef:32, baseY:H-8, baseW:194 },
+    couple:{ path:coupleWidePath, win:{x:W*0.69, y:H*0.47, r:W*0.185}, win2:{x:W*0.31, y:H*0.47, r:W*0.185}, textY:H*0.80, glyphY:H*0.88, span:460, tdef:30, baseY:H-8, baseW:208 },
   };
   let SHAPE = SHAPES.tablet;
 
@@ -1465,6 +1482,11 @@ renderGrid(); applyDayNight(); paintCart();
     if (SHAPE.spine){
       ctx.strokeStyle = st.night? 'rgba(60,38,10,.5)':'rgba(90,75,50,.45)'; ctx.lineWidth=3;
       ctx.beginPath(); ctx.moveTo(W/2, H*0.235); ctx.lineTo(W/2, H*0.78); ctx.stroke();
+    }
+    // the wick is an engraving on the neck, not a separate part
+    if (SHAPE.wick){
+      ctx.strokeStyle = st.night? 'rgba(60,38,10,.5)':'rgba(90,75,50,.45)'; ctx.lineWidth=4;
+      ctx.beginPath(); ctx.moveTo(W/2, H*0.44); ctx.lineTo(W/2, H*0.505); ctx.stroke();
     }
     // wall: engraved brick joints (staggered courses)
     if (SHAPE.bricks){
