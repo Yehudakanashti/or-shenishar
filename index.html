@@ -422,6 +422,13 @@ footer .brand{color:#fff}
                 <button class="chip st-pw" data-pw="electric" aria-pressed="false">חיבור לחשמל +₪25</button>
               </div>
             </div>
+            <div class="st-row" id="stWinRow">
+              <label class="st-lbl">חלון</label>
+              <div class="opt-row" style="gap:.4rem">
+                <button class="chip st-win" data-w="circle" aria-pressed="true">עגול</button>
+                <button class="chip st-win" data-w="heart" aria-pressed="false">♥ לב</button>
+              </div>
+            </div>
             <dl class="st-specs" id="stSpecs"></dl>
           </div>
         </div>
@@ -1199,14 +1206,16 @@ renderGrid(); applyDayNight(); paintCart();
   const st = { img:null, imgCut:null, bgcut:false, ix:0, iy:0, zoom:1.2,
                text:'', tsize:34, tsizeDirty:false, toff:0, fitBad:false,
                font:"'Frank Ruhl Libre', serif",
-               glyph:'heart', night:true, model:null, power:'battery' };
+               glyph:'heart', night:true, model:null, power:'battery', winShape:'circle' };
 
   // silhouette per model family - the preview follows the chosen shape
-  const SHAPE_OF = { heart:'heartwin', heart_full:'heart', disc:'circle',
-    flame:'flame', flame_heart:'flame', flame_slim:'flame',
-    flame_twin:'flame', ner:'flame', bonfire:'flame',
-    sefer:'book', couple:'couple' };
+  const SHAPE_OF = { heart:'tablet', arch:'archtop', tablet:'plain', heart_full:'heart', disc:'circle',
+    flame:'flame', flame_heart:'flame', flame_slim:'flameslim',
+    flame_twin:'flametwin', ner:'candle', bonfire:'flame',
+    sefer:'book', kotel:'wall', couple:'couple' };
   const shapeFor = m => SHAPE_OF[m.id] || 'tablet';
+  // the window shape that IS the model's identity (customer may still change)
+  const WIN_DEF = { heart:'heart', heart_full:'heart', flame_heart:'heart' };
 
   // sellable models only (not held); default to the flagship
   const sellable = PRODUCTS.filter(p => p.power!=='hold' && p.power!=='accessory');
@@ -1246,15 +1255,72 @@ renderGrid(); applyDayNight(); paintCart();
   function circlePath(){
     ctx.beginPath(); ctx.arc(W/2, H*0.5, W*0.455, 0, Math.PI*2); ctx.closePath();
   }
-  function flamePath(){
-    const cx=W/2, top=H*0.055, bot=H-18, w=W*0.42;
-    ctx.beginPath();
+  function teardropSub(cx, top, bot, w){
+    const rise = bot - top;
     ctx.moveTo(cx, top);
-    ctx.bezierCurveTo(cx+w*0.30, H*0.24, cx+w, H*0.52, cx+w, H*0.72);
+    ctx.bezierCurveTo(cx+w*0.30, top+rise*0.31, cx+w, top+rise*0.62, cx+w, top+rise*0.83);
     ctx.quadraticCurveTo(cx+w, bot, cx+w*0.55, bot);
     ctx.lineTo(cx-w*0.55, bot);
-    ctx.quadraticCurveTo(cx-w, bot, cx-w, H*0.72);
-    ctx.bezierCurveTo(cx-w, H*0.52, cx-w*0.30, H*0.24, cx, top);
+    ctx.quadraticCurveTo(cx-w, bot, cx-w, top+rise*0.83);
+    ctx.bezierCurveTo(cx-w, top+rise*0.62, cx-w*0.30, top+rise*0.31, cx, top);
+    ctx.closePath();
+  }
+  function flamePath(){ ctx.beginPath(); teardropSub(W/2, H*0.055, H-18, W*0.42); }
+  function archTopPath(){
+    const mm=30, bot=H-20, shoulder=H*0.30;
+    ctx.beginPath();
+    ctx.moveTo(mm, bot);
+    ctx.lineTo(mm, shoulder);
+    ctx.bezierCurveTo(mm, H*0.10, W/2-40, H*0.055, W/2, H*0.055);
+    ctx.bezierCurveTo(W/2+40, H*0.055, W-mm, H*0.10, W-mm, shoulder);
+    ctx.lineTo(W-mm, bot);
+    ctx.closePath();
+  }
+  function plainPath(){
+    const mm=30, top=52, bot=H-20, r=12;
+    ctx.beginPath();
+    ctx.moveTo(mm, bot);
+    ctx.lineTo(mm, top+r);
+    ctx.quadraticCurveTo(mm, top, mm+r, top);
+    ctx.lineTo(W-mm-r, top);
+    ctx.quadraticCurveTo(W-mm, top, W-mm, top+r);
+    ctx.lineTo(W-mm, bot);
+    ctx.closePath();
+  }
+  function flameSlimPath(){ ctx.beginPath(); teardropSub(W/2, H*0.03, H-18, W*0.26); }
+  function flameTwinPath(){
+    ctx.beginPath();
+    teardropSub(W*0.63, H*0.06, H-18, W*0.215);
+    teardropSub(W*0.30, H*0.40, H-18, W*0.16);
+  }
+  function candlePath(){
+    const hw=W*0.20, top=H*0.30, bot=H-18, r=14;
+    ctx.beginPath();
+    // candle body, rounded shoulders
+    ctx.moveTo(W/2-hw, bot);
+    ctx.lineTo(W/2-hw, top+r);
+    ctx.quadraticCurveTo(W/2-hw, top, W/2-hw+r, top);
+    ctx.lineTo(W/2+hw-r, top);
+    ctx.quadraticCurveTo(W/2+hw, top, W/2+hw, top+r);
+    ctx.lineTo(W/2+hw, bot);
+    ctx.closePath();
+    // the flame above the wick
+    teardropSub(W/2, H*0.055, H*0.275, W*0.115);
+  }
+  function wallPath(){
+    const m=30, top=H*0.17, bot=H-18, teeth=5, th=22;
+    const tw = (W-2*m)/(teeth*2-1);
+    ctx.beginPath();
+    ctx.moveTo(m, bot);
+    ctx.lineTo(m, top);
+    let x = m;
+    for (let i=0;i<teeth;i++){
+      ctx.lineTo(x, top); ctx.lineTo(x+tw, top);
+      if (i < teeth-1){ ctx.lineTo(x+tw, top+th); ctx.lineTo(x+tw*2, top+th); }
+      x += tw*2;
+    }
+    ctx.lineTo(W-m, top);
+    ctx.lineTo(W-m, bot);
     ctx.closePath();
   }
   function bookPath(){
@@ -1273,10 +1339,16 @@ renderGrid(); applyDayNight(); paintCart();
   // the model's real height into mm-per-px for the engraving-size floor
   const SHAPES = {
     tablet:{ path:tabletPath, win:{x:W/2, y:H*0.34, r:W*0.285}, textY:H*0.735, glyphY:H*0.845, span:588, tdef:34, baseY:H-8, baseW:194 },
-    heartwin:{ path:tabletPath, win:{x:W/2, y:H*0.345, r:W*0.29}, winShape:'heart', textY:H*0.75, glyphY:H*0.855, span:588, tdef:34, baseY:H-8, baseW:194 },
+    archtop:{ path:archTopPath, win:{x:W/2, y:H*0.335, r:W*0.27}, textY:H*0.735, glyphY:H*0.845, span:585, tdef:34, baseY:H-20, baseW:190 },
+    plain:{ path:plainPath, win:{x:W/2, y:H*0.335, r:W*0.275}, textY:H*0.735, glyphY:H*0.845, span:568, tdef:34, baseY:H-20, baseW:190 },
     heart:{ path:heartPath, win:{x:W/2, y:H*0.40, r:W*0.235}, textY:H*0.615, glyphY:0, span:317, tdef:28 },
     circle:{ path:circlePath, win:{x:W/2, y:H*0.42, r:W*0.26}, textY:H*0.665, glyphY:H*0.755, span:582, tdef:32, baseY:H*0.5+W*0.455, baseW:96 },
     flame:{ path:flamePath, win:{x:W/2, y:H*0.46, r:W*0.215}, textY:H*0.72, glyphY:H*0.82, span:587, tdef:30, baseY:H-18, baseW:104 },
+    flameslim:{ path:flameSlimPath, win:{x:W/2, y:H*0.44, r:W*0.15}, textY:H*0.71, glyphY:H*0.79, span:603, tdef:24, baseY:H-18, baseW:63 },
+    candle:{ path:candlePath, win:{x:W/2, y:H*0.50, r:W*0.155}, textY:H*0.74, glyphY:H*0.82, span:587, tdef:26, baseY:H-18, baseW:88 },
+    flametwin:{ path:flameTwinPath, win:{x:W*0.63, y:H*0.40, r:W*0.135}, textX:W*0.63, tscale:0.72,
+      textY:H*0.68, glyphY:0, emboss:{x:W*0.30, y:H*0.66}, span:584, tdef:26, baseY:H-18, baseW:120 },
+    wall:{ path:wallPath, win:{x:W/2, y:H*0.40, r:W*0.19}, textY:H*0.76, glyphY:H*0.845, bricks:true, span:513, tdef:30, baseY:H-18, baseW:190 },
     book:{ path:bookPath, win:{x:W*0.73, y:H*0.465, r:W*0.165}, textY:H*0.44, glyphY:H*0.62, textX:W*0.27, tscale:0.78, spine:true, span:371, tdef:34 },
     couple:{ path:tabletPath, win:{x:W*0.69, y:H*0.30, r:W*0.185}, win2:{x:W*0.31, y:H*0.30, r:W*0.185}, textY:H*0.66, glyphY:H*0.77, span:588, tdef:32, baseY:H-8, baseW:194 },
   };
@@ -1327,6 +1399,15 @@ renderGrid(); applyDayNight(); paintCart();
       const gy = SHAPE.glyphY + st.toff;
       [[tx-15,gy],[tx+15,gy],[tx,gy-24],[tx,gy+6]].forEach(p => probe(p[0], p[1]));
     }
+    if (st.winShape === 'heart'){
+      const c = SHAPE.win, s = c.r*1.06;
+      SHAPE.path();
+      let winOut = false;
+      [[c.x-s*1.12,c.y],[c.x+s*1.12,c.y],[c.x,c.y-s*0.8],[c.x,c.y+s*0.98]]
+        .forEach(p => { if (!ctx.isPointInPath(p[0], p[1])) winOut = true; });
+      if (winOut){ st.fitBad = true;
+        warnMsg = 'חלון לב גדול מדי לצורה הזו — בחרו חלון עגול.'; }
+    }
     st.fitBad = outside || clash;
     warnMsg = clash ? 'הכיתוב נכנס לתוך חלון התמונה — הזיזו אותו למטה או הקטינו את הגופן.'
             : outside ? 'הכיתוב חורג מגבולות הצורה — קצרו את הטקסט, הקטינו את הגופן או הזיזו אותו.'
@@ -1346,7 +1427,7 @@ renderGrid(); applyDayNight(); paintCart();
   }
   const winClip = () => {
     const c = SHAPE.win;
-    if (SHAPE.winShape === 'heart') heartWinPath(c.x, c.y, c.r);
+    if (st.winShape === 'heart') heartWinPath(c.x, c.y, c.r);
     else { ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.closePath(); }
   };
 
@@ -1374,6 +1455,19 @@ renderGrid(); applyDayNight(); paintCart();
     if (SHAPE.spine){
       ctx.strokeStyle = st.night? 'rgba(60,38,10,.5)':'rgba(90,75,50,.45)'; ctx.lineWidth=3;
       ctx.beginPath(); ctx.moveTo(W/2, H*0.235); ctx.lineTo(W/2, H*0.78); ctx.stroke();
+    }
+    // wall: engraved brick joints (staggered courses)
+    if (SHAPE.bricks){
+      ctx.strokeStyle = st.night? 'rgba(60,38,10,.45)':'rgba(90,75,50,.4)'; ctx.lineWidth=2.5;
+      ctx.beginPath();
+      const top=H*0.17+26, bot=H-30, course=46;
+      let row=0;
+      for (let y=top; y<bot; y+=course, row++){
+        ctx.moveTo(34, y); ctx.lineTo(W-34, y);
+        const off = (row%2) ? 0 : 47;
+        for (let x=34+off; x<W-34; x+=94){ ctx.moveTo(x, y); ctx.lineTo(x, Math.min(y+course, bot)); }
+      }
+      ctx.stroke();
     }
     ctx.restore();
 
@@ -1457,6 +1551,11 @@ renderGrid(); applyDayNight(); paintCart();
       ctx.fillStyle = inkTxt; ctx.textAlign='center';
       ctx.font = '30px serif';
       ctx.fillText(st.glyph==='heart' ? '♥' : '✡', tx, SHAPE.glyphY + st.toff);
+    }
+    if (SHAPE.emboss){
+      ctx.fillStyle = st.night? '#6B4A1A' : '#8A7A57'; ctx.textAlign='center';
+      ctx.font = '26px serif';
+      ctx.fillText('♥', SHAPE.emboss.x, SHAPE.emboss.y);
     }
   }
 
@@ -1556,6 +1655,11 @@ renderGrid(); applyDayNight(); paintCart();
   $('#stTsize').oninput = e => { st.tsize = +e.target.value; st.tsizeDirty = true; paintMm(); draw(); };
   $('#stToff').oninput = e => { st.toff = +e.target.value; draw(); };
   $('#stFont').onchange = e => { st.font = e.target.value; draw(); };
+  document.querySelectorAll('.st-win').forEach(b => b.onclick = () => {
+    st.winShape = b.dataset.w;
+    document.querySelectorAll('.st-win').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+    draw();
+  });
   document.querySelectorAll('.st-glyph').forEach(b => b.onclick = () => {
     st.glyph = b.dataset.g;
     document.querySelectorAll('.st-glyph').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
@@ -1593,6 +1697,9 @@ renderGrid(); applyDayNight(); paintCart();
     if (!both) st.power = 'battery';
     document.querySelectorAll('.st-pw').forEach(b =>
       b.setAttribute('aria-pressed', String(b.dataset.pw===st.power)));
+    st.winShape = WIN_DEF[st.model.id] || 'circle';
+    document.querySelectorAll('.st-win').forEach(x =>
+      x.setAttribute('aria-pressed', String(x.dataset.w===st.winShape)));
     paintPrice(); paintSpecs(); syncTextLimits(); draw();
   };
   $('#stModel').onchange = e => { st.model = sellable.find(p=>p.id===e.target.value); syncModel(); };
@@ -1614,6 +1721,7 @@ renderGrid(); applyDayNight(); paintCart();
     if (st.text) parts.push('גובה כיתוב: ~'+Math.round(effSize()*mmPerPx())+' מ״מ');
     parts.push('גופן: '+fontName);
     if (st.glyph!=='none') parts.push('סמל: '+(st.glyph==='heart'?'לב':'מגן דוד'));
+    parts.push('חלון: ' + (st.winShape==='heart' ? 'לב' : 'עגול'));
     if (st.bgcut) parts.push('רקע: הוסר');
     addToCart(st.model, st.power, parts.join(' · '));
     openDrawer();
