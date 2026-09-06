@@ -468,7 +468,7 @@ footer .brand{color:#fff}
           <span class="st-n">3</span>
           <div class="st-body">
             <b>ההקדשה</b>
-            <input type="text" id="stText" aria-label="טקסט ההקדשה" maxlength="24" placeholder="לדוגמה: אני תמיד איתך" value="">
+            <textarea id="stText" aria-label="טקסט ההקדשה" rows="2" maxlength="48" placeholder="לדוגמה: אני תמיד איתך&#10;Enter — שורה שנייה" style="resize:none;line-height:1.5"></textarea>
             <div class="st-row">
               <label class="st-lbl">גופן</label>
               <select id="stFont" aria-label="בחירת גופן">
@@ -494,6 +494,14 @@ footer .brand{color:#fff}
             <div class="st-row">
               <label class="st-lbl">מיקום</label>
               <input type="range" id="stToff" aria-label="מיקום אנכי של הכיתוב" min="-70" max="70" value="0">
+            </div>
+            <div class="st-row st-glyphrow">
+              <label class="st-lbl">גודל סמל</label>
+              <input type="range" id="stGsize" aria-label="גודל הסמל" min="16" max="56" value="30">
+            </div>
+            <div class="st-row st-glyphrow">
+              <label class="st-lbl">מיקום סמל</label>
+              <input type="range" id="stGoff" aria-label="מיקום אנכי של הסמל" min="-70" max="70" value="0">
             </div>
             <span class="hint st-warn" id="stFitWarn" hidden></span>
           </div>
@@ -1211,7 +1219,7 @@ renderGrid(); applyDayNight(); paintCart();
   const cv = $('#stCanvas'), ctx = cv.getContext('2d');
   const W = cv.width, H = 640;   // shape layout box; the strip below it hosts the base
   const st = { img:null, imgCut:null, bgcut:false, ix:0, iy:0, zoom:1.2,
-               text:'', tsize:34, tsizeDirty:false, toff:0, fitBad:false,
+               text:'', tsize:34, tsizeDirty:false, toff:0, gsize:30, goff:0, fitBad:false,
                font:"'Frank Ruhl Libre', serif",
                glyph:'heart', night:true, model:null, power:'battery', winShape:'circle', winShape2:'circle' };
 
@@ -1382,6 +1390,9 @@ renderGrid(); applyDayNight(); paintCart();
   const MIN_MM = 6;   // smallest engraving we can produce crisply
   const mmPerPx = () => (parseFloat(st.model.size) * 10) / SHAPE.span;
   const effSize = () => Math.round(st.tsize * (SHAPE.tscale || 1));
+  // the glyph steps down on its own when a second dedication line exists
+  const glyphYNow = () => SHAPE.glyphY + st.toff + st.goff +
+    (st.text.includes('\n') ? effSize()*0.78 : 0);
   function paintMm(){
     const sl = $('#stTsize');
     const atMin = +sl.value <= +sl.min;
@@ -1411,17 +1422,25 @@ renderGrid(); applyDayNight(); paintCart();
       wins.forEach(c => { if (Math.hypot(x-c.x, y-c.y) < c.r+4) clash = true; });
     };
     SHAPE.path();
+    let textBot = -1, glyphClash = false;
     if (st.text){
       const ts = effSize();
       ctx.font = '700 ' + ts + 'px ' + st.font;
-      const w = ctx.measureText(st.text).width / 2;
-      const top = ty - ts*0.78, bot = ty + ts*0.22;
-      [[tx-w,top],[tx+w,top],[tx-w,bot],[tx+w,bot],[tx-w,ty],[tx+w,ty],[tx,top],[tx,bot]]
-        .forEach(p => probe(p[0], p[1]));
+      const lines = st.text.split('\n').slice(0, 2);
+      lines.forEach((ln, i) => {
+        const ly = ty + i * ts * 1.24;
+        const w = ctx.measureText(ln).width / 2;
+        const top = ly - ts*0.78, bot = ly + ts*0.22;
+        textBot = Math.max(textBot, bot);
+        [[tx-w,top],[tx+w,top],[tx-w,bot],[tx+w,bot],[tx-w,ly],[tx+w,ly],[tx,top],[tx,bot]]
+          .forEach(p => probe(p[0], p[1]));
+      });
     }
     if (st.glyph !== 'none' && SHAPE.glyphY){
-      const gy = SHAPE.glyphY + st.toff;
-      [[tx-15,gy],[tx+15,gy],[tx,gy-24],[tx,gy+6]].forEach(p => probe(p[0], p[1]));
+      const gy = glyphYNow(), gr = st.gsize/2;
+      [[tx-gr,gy],[tx+gr,gy],[tx,gy-st.gsize*0.8],[tx,gy+st.gsize*0.15]]
+        .forEach(p => probe(p[0], p[1]));
+      if (textBot > 0 && gy - st.gsize*0.8 < textBot + 4) glyphClash = true;
     }
     const winChecks = [[SHAPE.win, st.winShape]];
     if (SHAPE.win2) winChecks.push([SHAPE.win2, st.winShape2]);
@@ -1435,9 +1454,10 @@ renderGrid(); applyDayNight(); paintCart();
       if (winOut){ st.fitBad = true;
         warnMsg = 'חלון לב גדול מדי לצורה הזו — בחרו חלון עגול.'; }
     }
-    st.fitBad = outside || clash;
+    st.fitBad = outside || clash || glyphClash;
     warnMsg = clash ? 'הכיתוב נכנס לתוך חלון התמונה — הזיזו אותו למטה או הקטינו את הגופן.'
             : outside ? 'הכיתוב חורג מגבולות הצורה — קצרו את הטקסט, הקטינו את הגופן או הזיזו אותו.'
+            : glyphClash ? 'הכיתוב והסמל מתנגשים — הזיזו את הסמל למטה או הקטינו.'
             : '';
     const el = $('#stFitWarn');
     if (st.fitBad){ el.textContent = '⚠ ' + warnMsg; el.hidden = false; }
@@ -1640,13 +1660,15 @@ renderGrid(); applyDayNight(); paintCart();
     const tx = SHAPE.textX || W/2, ty = SHAPE.textY + st.toff;
     if (st.text){
       ctx.fillStyle = inkTxt; ctx.textAlign = 'center';
-      ctx.font = '700 ' + effSize() + 'px ' + st.font;
-      ctx.fillText(st.text, tx, ty);
+      const ts = effSize();
+      ctx.font = '700 ' + ts + 'px ' + st.font;
+      const lines = st.text.split('\n').slice(0, 2);
+      lines.forEach((ln, i) => ctx.fillText(ln, tx, ty + i * ts * 1.24));
     }
     if (st.glyph !== 'none' && SHAPE.glyphY){
       ctx.fillStyle = inkTxt; ctx.textAlign='center';
-      ctx.font = '30px serif';
-      ctx.fillText(st.glyph==='heart' ? '♥' : '✡', tx, SHAPE.glyphY + st.toff);
+      ctx.font = st.gsize + 'px serif';
+      ctx.fillText(st.glyph==='heart' ? '♥' : '✡', tx, glyphYNow());
     }
     if (SHAPE.emboss){
       ctx.fillStyle = st.night? '#6B4A1A' : '#8A7A57'; ctx.textAlign='center';
@@ -1747,7 +1769,17 @@ renderGrid(); applyDayNight(); paintCart();
   $('#stZoom').oninput = e => { st.zoom = e.target.value/100; draw(); };
 
   // text / font / glyph
-  $('#stText').oninput = e => { st.text = e.target.value; draw(); };
+  $('#stText').oninput = e => {
+    const lines = e.target.value.split('\n');
+    if (lines.length > 2) e.target.value = lines.slice(0, 2).join('\n');
+    st.text = e.target.value; draw();
+  };
+  $('#stGsize').oninput = e => { st.gsize = +e.target.value; draw(); };
+  $('#stGoff').oninput = e => { st.goff = +e.target.value; draw(); };
+  const syncGlyphRows = () => {
+    const show = st.glyph !== 'none' && !!SHAPE.glyphY;
+    document.querySelectorAll('.st-glyphrow').forEach(r => r.hidden = !show);
+  };
   $('#stTsize').oninput = e => { st.tsize = +e.target.value; st.tsizeDirty = true; paintMm(); draw(); };
   $('#stToff').oninput = e => { st.toff = +e.target.value; draw(); };
   $('#stFont').onchange = e => { st.font = e.target.value; draw(); };
@@ -1764,7 +1796,7 @@ renderGrid(); applyDayNight(); paintCart();
   document.querySelectorAll('.st-glyph').forEach(b => b.onclick = () => {
     st.glyph = b.dataset.g;
     document.querySelectorAll('.st-glyph').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
-    draw();
+    syncGlyphRows(); draw();
   });
   // day/night
   $('#stDay').onclick  = () => { st.night=false; syncTog(); draw(); };
@@ -1807,7 +1839,7 @@ renderGrid(); applyDayNight(); paintCart();
     const twin = !!(SHAPES[shapeFor(st.model)] || {}).win2;
     $('#stWin2Row').hidden = !twin;
     $('#stWinLbl').textContent = twin ? 'חלון ימין' : 'חלון';
-    paintPrice(); paintSpecs(); syncTextLimits(); draw();
+    paintPrice(); paintSpecs(); syncTextLimits(); syncGlyphRows(); draw();
   };
   $('#stModel').onchange = e => { st.model = sellable.find(p=>p.id===e.target.value); syncModel(); };
   document.querySelectorAll('.st-pw').forEach(b => b.onclick = () => {
@@ -1824,10 +1856,10 @@ renderGrid(); applyDayNight(); paintCart();
       $('#stFitWarn').scrollIntoView({behavior:'smooth',block:'center'}); return; }
     const fontName = $('#stFont').selectedOptions[0].textContent;
     const parts = [];
-    if (st.text) parts.push('כיתוב: "'+st.text+'"');
+    if (st.text) parts.push('כיתוב: "'+st.text.split('\n').slice(0,2).join(' / ')+'"');
     if (st.text) parts.push('גובה כיתוב: ~'+Math.round(effSize()*mmPerPx())+' מ״מ');
     parts.push('גופן: '+fontName);
-    if (st.glyph!=='none') parts.push('סמל: '+(st.glyph==='heart'?'לב':'מגן דוד'));
+    if (st.glyph!=='none' && SHAPE.glyphY) parts.push('סמל: '+(st.glyph==='heart'?'לב':'מגן דוד')+' ~'+Math.round(st.gsize*mmPerPx())+' מ״מ');
     const wname = w => w==='heart' ? 'לב' : 'עגול';
     if (SHAPE.win2) parts.push('חלון ימין: ' + wname(st.winShape) + ' · חלון שמאל: ' + wname(st.winShape2));
     else parts.push('חלון: ' + wname(st.winShape));
