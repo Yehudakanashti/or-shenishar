@@ -1362,19 +1362,19 @@ renderGrid(); applyDayNight(); paintCart();
   // span = vertical extent of the silhouette in canvas px; used to translate
   // the model's real height into mm-per-px for the engraving-size floor
   const SHAPES = {
-    tablet:{ path:tabletPath, win:{x:W/2, y:H*0.34, r:W*0.285}, textY:H*0.735, glyphY:H*0.845, span:588, tdef:34, baseY:H-8, baseW:194 },
-    archtop:{ path:archTopPath, win:{x:W/2, y:H*0.335, r:W*0.27}, textY:H*0.735, glyphY:H*0.845, span:585, tdef:34, baseY:H-20, baseW:190 },
-    plain:{ path:plainPath, win:{x:W/2, y:H*0.335, r:W*0.275}, textY:H*0.735, glyphY:H*0.845, span:568, tdef:34, baseY:H-20, baseW:190 },
-    heart:{ path:heartPath, win:{x:W/2, y:H*0.40, r:W*0.235}, textY:H*0.615, glyphY:0, span:317, tdef:28 },
-    circle:{ path:circlePath, win:{x:W/2, y:H*0.42, r:W*0.26}, textY:H*0.665, glyphY:H*0.755, span:582, tdef:32, baseY:H*0.5+W*0.455, baseW:96 },
-    flame:{ path:flamePath, win:{x:W/2, y:H*0.46, r:W*0.215}, textY:H*0.72, glyphY:H*0.82, span:587, tdef:30, baseY:H-18, baseW:104 },
-    flameslim:{ path:flameSlimPath, win:{x:W/2, y:H*0.44, r:W*0.15}, textY:H*0.71, glyphY:H*0.79, span:603, tdef:24, baseY:H-18, baseW:63 },
-    candle:{ path:candlePath, win:{x:W/2, y:H*0.735, r:W*0.15}, textY:H*0.885, glyphY:0, wick:true, span:596, tdef:24, baseY:H-18, baseW:88 },
+    tablet:{ path:tabletPath, win:{x:W/2, y:H*0.34, r:W*0.285}, textY:H*0.735, glyphY:H*0.845, topY:44, span:588, tdef:34, baseY:H-8, baseW:194 },
+    archtop:{ path:archTopPath, win:{x:W/2, y:H*0.335, r:W*0.27}, textY:H*0.735, glyphY:H*0.845, topY:H*0.055, span:585, tdef:34, baseY:H-20, baseW:190 },
+    plain:{ path:plainPath, win:{x:W/2, y:H*0.335, r:W*0.275}, textY:H*0.735, glyphY:H*0.845, topY:52, span:568, tdef:34, baseY:H-20, baseW:190 },
+    heart:{ path:heartPath, win:{x:W/2, y:H*0.40, r:W*0.235}, textY:H*0.615, glyphY:0, topY:H*0.14, span:317, tdef:28 },
+    circle:{ path:circlePath, win:{x:W/2, y:H*0.42, r:W*0.26}, textY:H*0.665, glyphY:H*0.755, topY:H*0.5-W*0.455, span:582, tdef:32, baseY:H*0.5+W*0.455, baseW:96 },
+    flame:{ path:flamePath, win:{x:W/2, y:H*0.46, r:W*0.215}, textY:H*0.72, glyphY:H*0.82, topY:H*0.055, span:587, tdef:30, baseY:H-18, baseW:104 },
+    flameslim:{ path:flameSlimPath, win:{x:W/2, y:H*0.44, r:W*0.15}, textY:H*0.71, glyphY:H*0.79, topY:H*0.03, span:603, tdef:24, baseY:H-18, baseW:63 },
+    candle:{ path:candlePath, win:{x:W/2, y:H*0.735, r:W*0.15}, textY:H*0.885, glyphY:0, wick:true, topY:H*0.04, span:596, tdef:24, baseY:H-18, baseW:88 },
     flametwin:{ path:flameTwinPath, win:{x:W*0.63, y:H*0.40, r:W*0.135}, textX:W*0.63, tscale:0.72,
-      textY:H*0.68, glyphY:0, emboss:{x:W*0.30, y:H*0.66}, span:584, tdef:26, baseY:H-18, baseW:120 },
-    wall:{ path:wallPath, win:{x:W/2, y:H*0.40, r:W*0.19}, textY:H*0.76, glyphY:H*0.845, bricks:true, span:513, tdef:30, baseY:H-18, baseW:190 },
-    book:{ path:bookPath, win:{x:W*0.73, y:H*0.465, r:W*0.165}, textY:H*0.44, glyphY:H*0.62, textX:W*0.27, tscale:0.78, spine:true, span:371, tdef:34 },
-    couple:{ path:coupleWidePath, win:{x:W*0.69, y:H*0.47, r:W*0.185}, win2:{x:W*0.31, y:H*0.47, r:W*0.185}, textY:H*0.80, glyphY:H*0.88, span:460, tdef:30, baseY:H-8, baseW:208 },
+      textY:H*0.68, glyphY:0, emboss:{x:W*0.30, y:H*0.66}, topY:H*0.06, topX:W*0.63, span:584, tdef:26, baseY:H-18, baseW:120 },
+    wall:{ path:wallPath, win:{x:W/2, y:H*0.40, r:W*0.19}, textY:H*0.76, glyphY:H*0.845, bricks:true, topY:H*0.17, span:513, tdef:30, baseY:H-18, baseW:190 },
+    book:{ path:bookPath, win:{x:W*0.73, y:H*0.465, r:W*0.165}, textY:H*0.44, glyphY:H*0.62, textX:W*0.27, tscale:0.78, spine:true, topY:H*0.20, span:371, tdef:34 },
+    couple:{ path:coupleWidePath, win:{x:W*0.69, y:H*0.47, r:W*0.185}, win2:{x:W*0.31, y:H*0.47, r:W*0.185}, textY:H*0.80, glyphY:H*0.88, topY:H*0.25, span:460, tdef:30, baseY:H-8, baseW:208 },
   };
   let SHAPE = SHAPES.tablet;
 
@@ -1462,21 +1462,64 @@ renderGrid(); applyDayNight(); paintCart();
     ctx.clearRect(0,0,W,cv.height);
     // vitrine ground
     ctx.fillStyle = '#0F0D0C'; ctx.fillRect(0,0,W,cv.height);
+    if (st.night){
+      // the piece throws warm light onto the surface around it
+      const pool = ctx.createRadialGradient(W/2, H-6, 20, W/2, H-6, W*0.62);
+      pool.addColorStop(0, 'rgba(240,175,85,.20)');
+      pool.addColorStop(.5, 'rgba(220,150,60,.08)');
+      pool.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = pool;
+      ctx.fillRect(0, H*0.4, W, cv.height - H*0.4);
+    }
 
     // stone body
     ctx.save(); SHAPE.path(); ctx.clip();
+    const topY = SHAPE.topY != null ? SHAPE.topY : 44;
+    const hotX = SHAPE.textX || W/2;
+    const hotY = SHAPE.glyphY || Math.min(SHAPE.textY + 46, H*0.86);
     if (st.night){
-      const g = ctx.createRadialGradient(W/2,H*0.45,40, W/2,H*0.55,H*0.75);
-      g.addColorStop(0,'#EFC078'); g.addColorStop(.55,'#C89858'); g.addColorStop(1,'#6E4E22');
-      ctx.fillStyle = g;
+      // ivory shell lit from within - matched to photos of the real piece
+      const base = ctx.createLinearGradient(0, topY, 0, H);
+      base.addColorStop(0, '#E8C889');
+      base.addColorStop(.35, '#F3E2BC');
+      base.addColorStop(.72, '#F0D9A8');
+      base.addColorStop(1, '#DDBA82');
+      ctx.fillStyle = base; ctx.fillRect(0,0,W,H);
+      // side falloff - the walls curve away from the light
+      const lat = ctx.createLinearGradient(0,0,W,0);
+      lat.addColorStop(0,'rgba(105,70,25,.30)'); lat.addColorStop(.16,'rgba(0,0,0,0)');
+      lat.addColorStop(.84,'rgba(0,0,0,0)'); lat.addColorStop(1,'rgba(105,70,25,.30)');
+      ctx.fillStyle = lat; ctx.fillRect(0,0,W,H);
+      // the inner light's hotspot low in the body
+      const hot = ctx.createRadialGradient(hotX, hotY, 6, hotX, hotY, H*0.34);
+      hot.addColorStop(0,'rgba(255,244,205,.95)');
+      hot.addColorStop(.35,'rgba(255,228,160,.55)');
+      hot.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle = hot; ctx.fillRect(0,0,W,H);
+      // the crest glows brightest - light escaping at the thin top
+      const crest = ctx.createLinearGradient(0, topY-6, 0, topY+84);
+      crest.addColorStop(0,'rgba(255,248,215,.9)');
+      crest.addColorStop(.45,'rgba(255,235,175,.35)');
+      crest.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle = crest; ctx.fillRect(0,0,W,H);
     } else {
-      ctx.fillStyle = '#E7DFCB';
+      ctx.fillStyle = '#ECE5D6';
+      ctx.fillRect(0,0,W,H);
     }
-    ctx.fillRect(0,0,W,H);
-    // subtle grain
-    ctx.globalAlpha = st.night? .05 : .07;
+    // deterministic parchment mottle + grain (no flicker while dragging)
+    let ms = 13;
+    const mrnd = () => (ms = (ms * 16807) % 2147483647) / 2147483647;
+    ctx.globalAlpha = st.night ? .05 : .06;
+    for (let i=0;i<24;i++){
+      const bx = mrnd()*W, byy = mrnd()*H, br = 18 + mrnd()*44;
+      const blot = ctx.createRadialGradient(bx, byy, 2, bx, byy, br);
+      blot.addColorStop(0, i%2 ? 'rgba(120,85,35,.9)' : 'rgba(255,244,215,.9)');
+      blot.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = blot; ctx.fillRect(bx-br, byy-br, br*2, br*2);
+    }
+    ctx.globalAlpha = st.night? .04 : .05;
     for (let i=0;i<420;i++){ ctx.fillStyle = i%2?'#000':'#fff';
-      ctx.fillRect(Math.random()*W, Math.random()*H, 1.3, 1.3); }
+      ctx.fillRect(mrnd()*W, mrnd()*H, 1.3, 1.3); }
     ctx.globalAlpha = 1;
     // book spine
     if (SHAPE.spine){
@@ -1502,6 +1545,14 @@ renderGrid(); applyDayNight(); paintCart();
       ctx.stroke();
     }
     ctx.restore();
+    if (st.night){
+      const topY2 = SHAPE.topY != null ? SHAPE.topY : 44;
+      const spill = ctx.createRadialGradient(SHAPE.topX || W/2, topY2, 4, SHAPE.topX || W/2, topY2, 95);
+      spill.addColorStop(0, 'rgba(255,225,160,.28)');
+      spill.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = spill;
+      ctx.fillRect((SHAPE.topX || W/2)-95, topY2-95, 190, 120);
+    }
 
     // the real product stands on a separate printed base - show it for the
     // models that actually ship with one (the electric-ready originals)
@@ -1511,23 +1562,23 @@ renderGrid(); applyDayNight(); paintCart();
       ctx.fillStyle = 'rgba(0,0,0,.42)';
       ctx.beginPath(); ctx.ellipse(cx0, by + ph + 7, fw*1.25, 9, 0, 0, Math.PI*2); ctx.fill();
       const bg2 = ctx.createLinearGradient(0, by, 0, by + ph);
-      if (st.night){ bg2.addColorStop(0, '#2A1D0E'); bg2.addColorStop(1, '#140D05'); }
+      if (st.night){ bg2.addColorStop(0, '#CFC8BA'); bg2.addColorStop(1, '#948C7B'); }
       else { bg2.addColorStop(0, '#CFC5AD'); bg2.addColorStop(1, '#A99E86'); }
       ctx.fillStyle = bg2;
       ctx.beginPath();
       ctx.moveTo(cx0 - fw*1.06, by); ctx.lineTo(cx0 + fw*1.06, by);
       ctx.lineTo(cx0 + fw*1.12, by + ph); ctx.lineTo(cx0 - fw*1.12, by + ph);
       ctx.closePath(); ctx.fill();
-      if (st.night){ ctx.fillStyle = 'rgba(226,169,95,.38)'; ctx.fillRect(cx0 - fw*1.02, by, fw*2.04, 2); }
+      if (st.night){ ctx.fillStyle = 'rgba(255,214,140,.55)'; ctx.fillRect(cx0 - fw*1.02, by, fw*2.04, 3); }
     }
 
     // second window (couple): placeholder for the second portrait
     if (SHAPE.win2){
       const w2=SHAPE.win2;
       ctx.save(); winPathFor(w2, st.winShape2); ctx.clip();
-      ctx.fillStyle = st.night? '#8A6631' : '#CBBF9F';
+      ctx.fillStyle = st.night? '#CBA76F' : '#CBBF9F';
       ctx.fillRect(w2.x-w2.r*1.3, w2.y-w2.r*1.3, w2.r*2.6, w2.r*2.6);
-      ctx.fillStyle = st.night? '#5E4319' : '#8F8368';
+      ctx.fillStyle = st.night? '#7A5A28' : '#8F8368';
       ctx.font='13px Assistant'; ctx.textAlign='center';
       ctx.fillText('תמונה שנייה', w2.x, w2.y+4);
       ctx.restore();
@@ -1543,12 +1594,12 @@ renderGrid(); applyDayNight(); paintCart();
     if (IMG){
       const base = Math.max((CIRC.r*2)/IMG.width, (CIRC.r*2)/IMG.height) * st.zoom;
       const dw = IMG.width*base, dh = IMG.height*base;
-      ctx.filter = 'grayscale(1) contrast(1.06)';
+      ctx.filter = 'grayscale(1) contrast(1.08) brightness(1.06)';
       ctx.drawImage(IMG, CIRC.x - dw/2 + st.ix, CIRC.y - dh/2 + st.iy, dw, dh);
       ctx.filter = 'none';
       // amber lithophane tint
       ctx.globalCompositeOperation = 'multiply';
-      ctx.fillStyle = st.night ? '#E2A95F' : '#B8A98C';
+      ctx.fillStyle = st.night ? '#EFC98F' : '#BDAF92';
       ctx.fillRect(CIRC.x-CIRC.r, CIRC.y-CIRC.r, CIRC.r*2, CIRC.r*2);
       if (st.night){
         ctx.globalCompositeOperation = 'soft-light';
@@ -1558,16 +1609,18 @@ renderGrid(); applyDayNight(); paintCart();
       }
       ctx.globalCompositeOperation = 'source-over';
     } else {
-      ctx.fillStyle = st.night? '#8A6631' : '#CBBF9F';
+      ctx.fillStyle = st.night? '#CBA76F' : '#CBBF9F';
       ctx.fillRect(CIRC.x-CIRC.r, CIRC.y-CIRC.r, CIRC.r*2, CIRC.r*2);
-      ctx.fillStyle = st.night? '#5E4319' : '#8F8368';
+      ctx.fillStyle = st.night? '#7A5A28' : '#8F8368';
       ctx.font = '15px Assistant'; ctx.textAlign='center';
       ctx.fillText('התמונה שלכם כאן', CIRC.x, CIRC.y+5);
     }
     ctx.restore();
-    // window rim
+    // recessed medallion: engraved groove + raised rim highlight
     winClip();
-    ctx.lineWidth = 3; ctx.strokeStyle = st.night? 'rgba(60,38,10,.55)':'rgba(90,75,50,.5)'; ctx.stroke();
+    ctx.lineWidth = 3; ctx.strokeStyle = st.night? 'rgba(60,38,10,.45)':'rgba(90,75,50,.5)'; ctx.stroke();
+    winPathFor({x:CIRC.x, y:CIRC.y, r:CIRC.r+5}, st.winShape);
+    ctx.lineWidth = 2; ctx.strokeStyle = st.night? 'rgba(255,240,200,.4)':'rgba(255,255,255,.45)'; ctx.stroke();
 
     // dedication (engraved = darker than body); fit-checked live, and painted
     // in a warning tint when it escapes the shape or hits the portrait
