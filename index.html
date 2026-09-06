@@ -1597,6 +1597,17 @@ renderGrid(); applyDayNight(); paintCart();
       ctx.filter = 'grayscale(1) contrast(1.08) brightness(1.06)';
       ctx.drawImage(IMG, CIRC.x - dw/2 + st.ix, CIRC.y - dh/2 + st.iy, dw, dh);
       ctx.filter = 'none';
+      if (st.bgcut){
+        // face focus, like the production proofs: you centred the face with
+        // drag/zoom - everything around it melts into the glowing shell
+        const fg = ctx.createRadialGradient(CIRC.x, CIRC.y - CIRC.r*0.06, CIRC.r*0.44,
+                                            CIRC.x, CIRC.y, CIRC.r*0.99);
+        fg.addColorStop(0, 'rgba(255,255,255,0)');
+        fg.addColorStop(.72, 'rgba(255,255,255,.72)');
+        fg.addColorStop(1, 'rgba(255,255,255,1)');
+        ctx.fillStyle = fg;
+        ctx.fillRect(CIRC.x-CIRC.r, CIRC.y-CIRC.r, CIRC.r*2, CIRC.r*2);
+      }
       // amber lithophane tint
       ctx.globalCompositeOperation = 'multiply';
       ctx.fillStyle = st.night ? '#EFC98F' : '#BDAF92';
