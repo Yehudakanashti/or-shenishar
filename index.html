@@ -297,6 +297,7 @@ details.faq p{padding:0 0 1.15rem;color:var(--muted);font-size:.92rem;font-weigh
 .st-specs dt{font-size:.72rem;font-weight:600;letter-spacing:.1em;color:var(--faint);align-self:start;padding-top:.1rem}
 .st-specs dd{margin:0;font-size:.88rem;color:var(--ink);line-height:1.5;font-variant-numeric:tabular-nums}
 .st-arrive{margin:0;font-size:.86rem;color:var(--muted);line-height:1.6}
+.st-warn{color:var(--bad);font-weight:600;font-size:.84rem}
 
 .toast{position:fixed;z-index:120;bottom:calc(1.5rem + env(safe-area-inset-bottom));inset-inline-start:50%;transform:translate(50%,140%);
   background:var(--ink);color:var(--ground);padding:.85rem 1.5rem;border-radius:3px;font-size:.9rem;font-weight:600;
@@ -427,6 +428,13 @@ footer a:hover{color:var(--flame)}
               <input type="range" id="stZoom" aria-label="קירוב התמונה" min="100" max="300" value="120">
             </div>
             <span class="hint" id="stDragHint" hidden>גררו את התמונה בתוך החלון כדי למקם את הפנים</span>
+            <div class="st-row" id="stBgRow" hidden>
+              <label class="st-lbl">רקע</label>
+              <div class="opt-row" style="gap:.4rem">
+                <button class="chip st-bg" data-bg="keep" aria-pressed="true">מקורי</button>
+                <button class="chip st-bg" data-bg="cut" aria-pressed="false">הסרת רקע</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -452,6 +460,16 @@ footer a:hover{color:var(--flame)}
                 <button class="chip st-glyph" data-g="none" aria-pressed="false">בלי</button>
               </div>
             </div>
+            <div class="st-row">
+              <label class="st-lbl">גודל</label>
+              <input type="range" id="stTsize" aria-label="גודל הכיתוב" min="20" max="54" value="34">
+              <span class="hint" id="stMm" style="flex:none;min-width:5.4rem;text-align:start"></span>
+            </div>
+            <div class="st-row">
+              <label class="st-lbl">מיקום</label>
+              <input type="range" id="stToff" aria-label="מיקום אנכי של הכיתוב" min="-70" max="70" value="0">
+            </div>
+            <span class="hint st-warn" id="stFitWarn" hidden></span>
           </div>
         </div>
 
@@ -1166,7 +1184,9 @@ renderGrid(); applyDayNight(); paintCart();
 (function(){
   const cv = $('#stCanvas'), ctx = cv.getContext('2d');
   const W = cv.width, H = cv.height;
-  const st = { img:null, ix:0, iy:0, zoom:1.2, text:'', font:"'Frank Ruhl Libre', serif",
+  const st = { img:null, imgCut:null, bgcut:false, ix:0, iy:0, zoom:1.2,
+               text:'', tsize:34, tsizeDirty:false, toff:0, fitBad:false,
+               font:"'Frank Ruhl Libre', serif",
                glyph:'heart', night:true, model:null, power:'battery' };
 
   // silhouette per model family - the preview follows the chosen shape
@@ -1237,15 +1257,71 @@ renderGrid(); applyDayNight(); paintCart();
     ctx.lineTo(W-m, bot);
     ctx.closePath();
   }
+  // span = vertical extent of the silhouette in canvas px; used to translate
+  // the model's real height into mm-per-px for the engraving-size floor
   const SHAPES = {
-    tablet:{ path:tabletPath, win:{x:W/2, y:H*0.34, r:W*0.285}, textY:H*0.735, glyphY:H*0.845, textW:W*0.74 },
-    heart:{ path:heartPath, win:{x:W/2, y:H*0.40, r:W*0.235}, textY:H*0.70, glyphY:0, textW:W*0.42 },
-    circle:{ path:circlePath, win:{x:W/2, y:H*0.42, r:W*0.26}, textY:H*0.665, glyphY:H*0.755, textW:W*0.62 },
-    flame:{ path:flamePath, win:{x:W/2, y:H*0.46, r:W*0.215}, textY:H*0.72, glyphY:H*0.82, textW:W*0.56 },
-    book:{ path:bookPath, win:{x:W*0.73, y:H*0.465, r:W*0.165}, textY:H*0.44, glyphY:H*0.62, textW:W*0.34, textX:W*0.27, spine:true },
-    couple:{ path:tabletPath, win:{x:W*0.69, y:H*0.30, r:W*0.185}, win2:{x:W*0.31, y:H*0.30, r:W*0.185}, textY:H*0.66, glyphY:H*0.77, textW:W*0.74 },
+    tablet:{ path:tabletPath, win:{x:W/2, y:H*0.34, r:W*0.285}, textY:H*0.735, glyphY:H*0.845, span:588, tdef:34 },
+    heart:{ path:heartPath, win:{x:W/2, y:H*0.40, r:W*0.235}, textY:H*0.615, glyphY:0, span:317, tdef:28 },
+    circle:{ path:circlePath, win:{x:W/2, y:H*0.42, r:W*0.26}, textY:H*0.665, glyphY:H*0.755, span:582, tdef:32 },
+    flame:{ path:flamePath, win:{x:W/2, y:H*0.46, r:W*0.215}, textY:H*0.72, glyphY:H*0.82, span:587, tdef:30 },
+    book:{ path:bookPath, win:{x:W*0.73, y:H*0.465, r:W*0.165}, textY:H*0.44, glyphY:H*0.62, textX:W*0.27, tscale:0.78, spine:true, span:371, tdef:34 },
+    couple:{ path:tabletPath, win:{x:W*0.69, y:H*0.30, r:W*0.185}, win2:{x:W*0.31, y:H*0.30, r:W*0.185}, textY:H*0.66, glyphY:H*0.77, span:588, tdef:32 },
   };
   let SHAPE = SHAPES.tablet;
+
+  /* ---- engraving size floor: real mm per model, honest to production ---- */
+  const MIN_MM = 6;   // smallest engraving we can produce crisply
+  const mmPerPx = () => (parseFloat(st.model.size) * 10) / SHAPE.span;
+  const effSize = () => Math.round(st.tsize * (SHAPE.tscale || 1));
+  function paintMm(){
+    const sl = $('#stTsize');
+    const atMin = +sl.value <= +sl.min;
+    $('#stMm').textContent = '≈ ' + Math.round(effSize()*mmPerPx()) + ' מ״מ' + (atMin? ' · מינימום':'');
+  }
+  function syncTextLimits(){
+    const minPx = Math.max(20, Math.ceil(MIN_MM / (mmPerPx() * (SHAPE.tscale || 1))));
+    const sl = $('#stTsize');
+    sl.min = minPx;
+    // untouched slider follows each shape's comfortable default
+    if (!st.tsizeDirty) st.tsize = Math.max(minPx, SHAPE.tdef || 34);
+    if (st.tsize < minPx) st.tsize = minPx;
+    sl.value = st.tsize;
+    paintMm();
+  }
+
+  /* ---- live fit check: the dedication must sit inside the silhouette and
+         clear of the portrait window(s); warns before it becomes an order --- */
+  let warnMsg = '';
+  function checkFit(){
+    st.fitBad = false; warnMsg = '';
+    const tx = SHAPE.textX || W/2, ty = SHAPE.textY + st.toff;
+    let outside = false, clash = false;
+    const wins = [SHAPE.win].concat(SHAPE.win2? [SHAPE.win2] : []);
+    const probe = (x,y) => {
+      if (!ctx.isPointInPath(x,y)) outside = true;
+      wins.forEach(c => { if (Math.hypot(x-c.x, y-c.y) < c.r+4) clash = true; });
+    };
+    SHAPE.path();
+    if (st.text){
+      const ts = effSize();
+      ctx.font = '700 ' + ts + 'px ' + st.font;
+      const w = ctx.measureText(st.text).width / 2;
+      const top = ty - ts*0.78, bot = ty + ts*0.22;
+      [[tx-w,top],[tx+w,top],[tx-w,bot],[tx+w,bot],[tx-w,ty],[tx+w,ty],[tx,top],[tx,bot]]
+        .forEach(p => probe(p[0], p[1]));
+    }
+    if (st.glyph !== 'none' && SHAPE.glyphY){
+      const gy = SHAPE.glyphY + st.toff;
+      [[tx-15,gy],[tx+15,gy],[tx,gy-24],[tx,gy+6]].forEach(p => probe(p[0], p[1]));
+    }
+    st.fitBad = outside || clash;
+    warnMsg = clash ? 'הכיתוב נכנס לתוך חלון התמונה — הזיזו אותו למטה או הקטינו את הגופן.'
+            : outside ? 'הכיתוב חורג מגבולות הצורה — קצרו את הטקסט, הקטינו את הגופן או הזיזו אותו.'
+            : '';
+    const el = $('#stFitWarn');
+    if (st.fitBad){ el.textContent = '⚠ ' + warnMsg; el.hidden = false; }
+    else if (!el.hidden) el.hidden = true;
+  }
 
   function draw(){
     ctx.clearRect(0,0,W,H);
@@ -1292,11 +1368,12 @@ renderGrid(); applyDayNight(); paintCart();
     const CIRC = SHAPE.win;
     ctx.save();
     ctx.beginPath(); ctx.arc(CIRC.x, CIRC.y, CIRC.r, 0, Math.PI*2); ctx.clip();
-    if (st.img){
-      const base = Math.max((CIRC.r*2)/st.img.width, (CIRC.r*2)/st.img.height) * st.zoom;
-      const dw = st.img.width*base, dh = st.img.height*base;
+    const IMG = (st.bgcut && st.imgCut) ? st.imgCut : st.img;
+    if (IMG){
+      const base = Math.max((CIRC.r*2)/IMG.width, (CIRC.r*2)/IMG.height) * st.zoom;
+      const dw = IMG.width*base, dh = IMG.height*base;
       ctx.filter = 'grayscale(1) contrast(1.06)';
-      ctx.drawImage(st.img, CIRC.x - dw/2 + st.ix, CIRC.y - dh/2 + st.iy, dw, dh);
+      ctx.drawImage(IMG, CIRC.x - dw/2 + st.ix, CIRC.y - dh/2 + st.iy, dw, dh);
       ctx.filter = 'none';
       // amber lithophane tint
       ctx.globalCompositeOperation = 'multiply';
@@ -1321,26 +1398,96 @@ renderGrid(); applyDayNight(); paintCart();
     ctx.beginPath(); ctx.arc(CIRC.x, CIRC.y, CIRC.r+1, 0, Math.PI*2);
     ctx.lineWidth = 3; ctx.strokeStyle = st.night? 'rgba(60,38,10,.55)':'rgba(90,75,50,.5)'; ctx.stroke();
 
-    // dedication (engraved = darker than body)
-    const inkTxt = st.night? '#6B4A1A' : '#8A7A57';
-    const tx = SHAPE.textX || W/2;
+    // dedication (engraved = darker than body); fit-checked live, and painted
+    // in a warning tint when it escapes the shape or hits the portrait
+    checkFit();
+    const inkTxt = st.fitBad ? '#A8452F' : (st.night? '#6B4A1A' : '#8A7A57');
+    const tx = SHAPE.textX || W/2, ty = SHAPE.textY + st.toff;
     if (st.text){
       ctx.fillStyle = inkTxt; ctx.textAlign = 'center';
-      ctx.font = '700 ' + (SHAPE.textX? 26 : 34) + 'px ' + st.font;
-      ctx.fillText(st.text, tx, SHAPE.textY, SHAPE.textW);
+      ctx.font = '700 ' + effSize() + 'px ' + st.font;
+      ctx.fillText(st.text, tx, ty);
     }
     if (st.glyph !== 'none' && SHAPE.glyphY){
       ctx.fillStyle = inkTxt; ctx.textAlign='center';
       ctx.font = '30px serif';
-      ctx.fillText(st.glyph==='heart' ? '♥' : '✡', tx, SHAPE.glyphY);
+      ctx.fillText(st.glyph==='heart' ? '♥' : '✡', tx, SHAPE.glyphY + st.toff);
     }
   }
+
+  /* ---- background removal: on-device ML (MediaPipe), photo never leaves
+         the browser; falls back to a soft focus vignette if unavailable ---- */
+  let segLoader = null;
+  function loadSeg(){
+    if (segLoader) return segLoader;
+    segLoader = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/selfie_segmentation.js';
+      s.onload = res; s.onerror = () => rej(new Error('cdn blocked'));
+      document.head.appendChild(s);
+    }).then(() => {
+      const seg = new SelfieSegmentation({ locateFile:
+        f => 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1/' + f });
+      seg.setOptions({ modelSelection: 1 });
+      return seg;
+    });
+    segLoader.catch(() => { segLoader = null; });
+    return segLoader;
+  }
+  async function cutBackground(){
+    const seg = await loadSeg();
+    const r = await new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error('timeout')), 20000);
+      seg.onResults(res => { clearTimeout(t); resolve(res); });
+      Promise.resolve(seg.send({image: st.img})).catch(e => { clearTimeout(t); reject(e); });
+    });
+    const c = document.createElement('canvas');
+    c.width = st.img.width; c.height = st.img.height;
+    const g = c.getContext('2d');
+    g.drawImage(r.segmentationMask, 0, 0, c.width, c.height);
+    g.globalCompositeOperation = 'source-in';
+    g.drawImage(st.img, 0, 0, c.width, c.height);
+    g.globalCompositeOperation = 'destination-over';
+    g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, c.width, c.height);
+    g.globalCompositeOperation = 'source-over';
+    return c;
+  }
+  function focusFallback(){
+    const c = document.createElement('canvas');
+    c.width = st.img.width; c.height = st.img.height;
+    const g = c.getContext('2d');
+    g.drawImage(st.img, 0, 0);
+    const R = Math.max(c.width, c.height) * 0.62;
+    const grad = g.createRadialGradient(c.width/2, c.height*0.42, R*0.45, c.width/2, c.height*0.42, R);
+    grad.addColorStop(0, 'rgba(255,255,255,0)'); grad.addColorStop(1, 'rgba(255,255,255,1)');
+    g.fillStyle = grad; g.fillRect(0, 0, c.width, c.height);
+    return c;
+  }
+  let cutting = false;
+  document.querySelectorAll('.st-bg').forEach(b => b.onclick = async () => {
+    if (!st.img){ toast('קודם העלו תמונה'); return; }
+    if (cutting) return;
+    const want = b.dataset.bg === 'cut';
+    if (want && !st.imgCut){
+      cutting = true; toast('מסירים את הרקע…');
+      try { st.imgCut = await cutBackground(); }
+      catch(e){ st.imgCut = focusFallback();
+        toast('הסרת רקע מלאה לא זמינה כרגע — הופעל מיקוד עדין סביב הפנים'); }
+      cutting = false;
+    }
+    st.bgcut = want;
+    document.querySelectorAll('.st-bg').forEach(x => x.setAttribute('aria-pressed', String(x===b)));
+    draw();
+  });
 
   // photo load
   $('#stFile').onchange = e => {
     const f = e.target.files && e.target.files[0]; if (!f) return;
     const img = new Image();
     img.onload = () => { st.img = img; st.ix = 0; st.iy = 0; st.zoom = 1.2; cv.classList.add('has-img');
+      st.imgCut = null; st.bgcut = false;
+      document.querySelectorAll('.st-bg').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.bg==='keep')));
+      $('#stBgRow').hidden = false;
       $('#stZoom').value = 120; $('#stCropRow').hidden = false; $('#stDragHint').hidden = false;
       $('#stUploadText').textContent = 'החלפת תמונה'; draw(); };
     img.src = URL.createObjectURL(f);
@@ -1361,6 +1508,8 @@ renderGrid(); applyDayNight(); paintCart();
 
   // text / font / glyph
   $('#stText').oninput = e => { st.text = e.target.value; draw(); };
+  $('#stTsize').oninput = e => { st.tsize = +e.target.value; st.tsizeDirty = true; paintMm(); draw(); };
+  $('#stToff').oninput = e => { st.toff = +e.target.value; draw(); };
   $('#stFont').onchange = e => { st.font = e.target.value; draw(); };
   document.querySelectorAll('.st-glyph').forEach(b => b.onclick = () => {
     st.glyph = b.dataset.g;
@@ -1396,7 +1545,7 @@ renderGrid(); applyDayNight(); paintCart();
     if (!both) st.power = 'battery';
     document.querySelectorAll('.st-pw').forEach(b =>
       b.setAttribute('aria-pressed', String(b.dataset.pw===st.power)));
-    paintPrice(); paintSpecs(); draw();
+    paintPrice(); paintSpecs(); syncTextLimits(); draw();
   };
   $('#stModel').onchange = e => { st.model = sellable.find(p=>p.id===e.target.value); syncModel(); };
   document.querySelectorAll('.st-pw').forEach(b => b.onclick = () => {
@@ -1409,11 +1558,15 @@ renderGrid(); applyDayNight(); paintCart();
   // add to cart: dedication + font carried on the order line
   $('#stAdd').onclick = () => {
     if (!st.img){ toast('העלו תמונה כדי להשלים את העיצוב'); $('#stUploadLabel').scrollIntoView({behavior:'smooth',block:'center'}); return; }
+    if (st.fitBad){ toast('הכיתוב חורג מהצורה — התאימו גודל או מיקום לפני ההזמנה');
+      $('#stFitWarn').scrollIntoView({behavior:'smooth',block:'center'}); return; }
     const fontName = $('#stFont').selectedOptions[0].textContent;
     const parts = [];
     if (st.text) parts.push('כיתוב: "'+st.text+'"');
+    if (st.text) parts.push('גובה כיתוב: ~'+Math.round(effSize()*mmPerPx())+' מ״מ');
     parts.push('גופן: '+fontName);
     if (st.glyph!=='none') parts.push('סמל: '+(st.glyph==='heart'?'לב':'מגן דוד'));
+    if (st.bgcut) parts.push('רקע: הוסר');
     addToCart(st.model, st.power, parts.join(' · '));
     openDrawer();
   };
