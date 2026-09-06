@@ -423,10 +423,17 @@ footer .brand{color:#fff}
               </div>
             </div>
             <div class="st-row" id="stWinRow">
-              <label class="st-lbl">חלון</label>
+              <label class="st-lbl" id="stWinLbl">חלון</label>
               <div class="opt-row" style="gap:.4rem">
                 <button class="chip st-win" data-w="circle" aria-pressed="true">עגול</button>
                 <button class="chip st-win" data-w="heart" aria-pressed="false">♥ לב</button>
+              </div>
+            </div>
+            <div class="st-row" id="stWin2Row" hidden>
+              <label class="st-lbl">חלון שמאל</label>
+              <div class="opt-row" style="gap:.4rem">
+                <button class="chip st-win2" data-w="circle" aria-pressed="true">עגול</button>
+                <button class="chip st-win2" data-w="heart" aria-pressed="false">♥ לב</button>
               </div>
             </div>
             <dl class="st-specs" id="stSpecs"></dl>
@@ -1206,7 +1213,7 @@ renderGrid(); applyDayNight(); paintCart();
   const st = { img:null, imgCut:null, bgcut:false, ix:0, iy:0, zoom:1.2,
                text:'', tsize:34, tsizeDirty:false, toff:0, fitBad:false,
                font:"'Frank Ruhl Libre', serif",
-               glyph:'heart', night:true, model:null, power:'battery', winShape:'circle' };
+               glyph:'heart', night:true, model:null, power:'battery', winShape:'circle', winShape2:'circle' };
 
   // silhouette per model family - the preview follows the chosen shape
   const SHAPE_OF = { heart:'tablet', arch:'archtop', tablet:'plain', heart_full:'heart', disc:'circle',
@@ -1399,8 +1406,11 @@ renderGrid(); applyDayNight(); paintCart();
       const gy = SHAPE.glyphY + st.toff;
       [[tx-15,gy],[tx+15,gy],[tx,gy-24],[tx,gy+6]].forEach(p => probe(p[0], p[1]));
     }
-    if (st.winShape === 'heart'){
-      const c = SHAPE.win, s = c.r*1.06;
+    const winChecks = [[SHAPE.win, st.winShape]];
+    if (SHAPE.win2) winChecks.push([SHAPE.win2, st.winShape2]);
+    for (const [c, shp] of winChecks){
+      if (shp !== 'heart' || !c) continue;
+      const s = c.r*1.06;
       SHAPE.path();
       let winOut = false;
       [[c.x-s*1.12,c.y],[c.x+s*1.12,c.y],[c.x,c.y-s*0.8],[c.x,c.y+s*0.98]]
@@ -1425,11 +1435,11 @@ renderGrid(); applyDayNight(); paintCart();
     ctx.bezierCurveTo(cx + s*0.95, y - s*0.75, cx + s*1.15, y + s*0.18, cx, y + s*0.95);
     ctx.closePath();
   }
-  const winClip = () => {
-    const c = SHAPE.win;
-    if (st.winShape === 'heart') heartWinPath(c.x, c.y, c.r);
+  const winPathFor = (c, shape) => {
+    if (shape === 'heart') heartWinPath(c.x, c.y, c.r);
     else { ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, Math.PI*2); ctx.closePath(); }
   };
+  const winClip = () => winPathFor(SHAPE.win, st.winShape);
 
   function draw(){
     ctx.clearRect(0,0,W,cv.height);
@@ -1492,14 +1502,14 @@ renderGrid(); applyDayNight(); paintCart();
     // second window (couple): placeholder for the second portrait
     if (SHAPE.win2){
       const w2=SHAPE.win2;
-      ctx.save(); ctx.beginPath(); ctx.arc(w2.x,w2.y,w2.r,0,Math.PI*2); ctx.clip();
+      ctx.save(); winPathFor(w2, st.winShape2); ctx.clip();
       ctx.fillStyle = st.night? '#8A6631' : '#CBBF9F';
-      ctx.fillRect(w2.x-w2.r, w2.y-w2.r, w2.r*2, w2.r*2);
+      ctx.fillRect(w2.x-w2.r*1.3, w2.y-w2.r*1.3, w2.r*2.6, w2.r*2.6);
       ctx.fillStyle = st.night? '#5E4319' : '#8F8368';
       ctx.font='13px Assistant'; ctx.textAlign='center';
       ctx.fillText('תמונה שנייה', w2.x, w2.y+4);
       ctx.restore();
-      ctx.beginPath(); ctx.arc(w2.x,w2.y,w2.r+1,0,Math.PI*2);
+      winPathFor(w2, st.winShape2);
       ctx.lineWidth=3; ctx.strokeStyle=st.night?'rgba(60,38,10,.55)':'rgba(90,75,50,.5)'; ctx.stroke();
     }
 
@@ -1660,6 +1670,11 @@ renderGrid(); applyDayNight(); paintCart();
     document.querySelectorAll('.st-win').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
     draw();
   });
+  document.querySelectorAll('.st-win2').forEach(b => b.onclick = () => {
+    st.winShape2 = b.dataset.w;
+    document.querySelectorAll('.st-win2').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
+    draw();
+  });
   document.querySelectorAll('.st-glyph').forEach(b => b.onclick = () => {
     st.glyph = b.dataset.g;
     document.querySelectorAll('.st-glyph').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
@@ -1698,8 +1713,14 @@ renderGrid(); applyDayNight(); paintCart();
     document.querySelectorAll('.st-pw').forEach(b =>
       b.setAttribute('aria-pressed', String(b.dataset.pw===st.power)));
     st.winShape = WIN_DEF[st.model.id] || 'circle';
+    st.winShape2 = 'circle';
     document.querySelectorAll('.st-win').forEach(x =>
       x.setAttribute('aria-pressed', String(x.dataset.w===st.winShape)));
+    document.querySelectorAll('.st-win2').forEach(x =>
+      x.setAttribute('aria-pressed', String(x.dataset.w===st.winShape2)));
+    const twin = !!(SHAPES[shapeFor(st.model)] || {}).win2;
+    $('#stWin2Row').hidden = !twin;
+    $('#stWinLbl').textContent = twin ? 'חלון ימין' : 'חלון';
     paintPrice(); paintSpecs(); syncTextLimits(); draw();
   };
   $('#stModel').onchange = e => { st.model = sellable.find(p=>p.id===e.target.value); syncModel(); };
@@ -1721,7 +1742,9 @@ renderGrid(); applyDayNight(); paintCart();
     if (st.text) parts.push('גובה כיתוב: ~'+Math.round(effSize()*mmPerPx())+' מ״מ');
     parts.push('גופן: '+fontName);
     if (st.glyph!=='none') parts.push('סמל: '+(st.glyph==='heart'?'לב':'מגן דוד'));
-    parts.push('חלון: ' + (st.winShape==='heart' ? 'לב' : 'עגול'));
+    const wname = w => w==='heart' ? 'לב' : 'עגול';
+    if (SHAPE.win2) parts.push('חלון ימין: ' + wname(st.winShape) + ' · חלון שמאל: ' + wname(st.winShape2));
+    else parts.push('חלון: ' + wname(st.winShape));
     if (st.bgcut) parts.push('רקע: הוסר');
     addToCart(st.model, st.power, parts.join(' · '));
     openDrawer();
