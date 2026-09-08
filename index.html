@@ -4,7 +4,7 @@
 <title>אור שנשאר</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Assistant:wght@300;400;600;700&family=David+Libre:wght@500;700&family=Noto+Rashi+Hebrew:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Frank+Ruhl+Libre:wght@400;500;700&family=Assistant:wght@300;400;600;700&family=David+Libre:wght@500;700&family=Noto+Rashi+Hebrew:wght@600&family=Varela+Round&family=Suez+One&display=swap" rel="stylesheet">
 
 <style>
 /* אור שנשאר · fintech-landing skin, FlyCard design language.
@@ -476,23 +476,30 @@ footer .brand{color:#fff}
                 <option value="'David Libre', serif">דוד</option>
                 <option value="'Noto Rashi Hebrew', serif">מסורתי</option>
                 <option value="'Assistant', sans-serif">נקי</option>
+                <option value="'Rubik', sans-serif">מודרני</option>
+                <option value="'Varela Round', sans-serif">עגול</option>
+                <option value="'Suez One', serif">חזק</option>
               </select>
             </div>
             <div class="st-row">
               <label class="st-lbl">סמל</label>
-              <div class="opt-row" style="gap:.4rem">
-                <button class="chip st-glyph" data-g="heart" aria-pressed="true">♥ לב</button>
-                <button class="chip st-glyph" data-g="star" aria-pressed="false">✡ מגן דוד</button>
-                <button class="chip st-glyph" data-g="none" aria-pressed="false">בלי</button>
-              </div>
+              <select id="stGlyph" aria-label="בחירת סמל">
+                <option value="heart" selected>♥ לב</option>
+                <option value="star">✡ מגן דוד</option>
+                <option value="dove">יונה</option>
+                <option value="star5">★ כוכב</option>
+                <option value="flower">❀ פרח</option>
+                <option value="inf">∞ אינסוף</option>
+                <option value="none">בלי סמל</option>
+              </select>
             </div>
             <div class="st-row">
-              <label class="st-lbl">גודל</label>
+              <label class="st-lbl">גודל כיתוב</label>
               <input type="range" id="stTsize" aria-label="גודל הכיתוב" min="20" max="54" value="34">
               <span class="hint" id="stMm" style="flex:none;min-width:5.4rem;text-align:start"></span>
             </div>
             <div class="st-row">
-              <label class="st-lbl">מיקום</label>
+              <label class="st-lbl">מיקום כיתוב</label>
               <input type="range" id="stToff" aria-label="מיקום אנכי של הכיתוב" min="-70" max="70" value="0">
             </div>
             <div class="st-row st-glyphrow">
@@ -1518,6 +1525,36 @@ renderGrid(); applyDayNight(); paintCart();
   };
   const winClip = () => winPathFor(SHAPE.win, st.winShape);
 
+  /* symbol library: text glyphs + the production dove curve (the exact
+     Catmull-Rom control points from make_stone.symbol_mask) */
+  const GLYPH_CHAR = { heart:'\u2665', star:'\u2721', star5:'\u2605', flower:'\u2740', inf:'\u221E' };
+  const GLYPH_NAME = { heart:'לב', star:'מגן דוד', dove:'יונה', star5:'כוכב', flower:'פרח', inf:'אינסוף' };
+  const DOVE = [[-1,.12],[-.99,.13],[-.98,.14],[-.82,.3],[-.64,.36],[-.44,.24],
+    [-.34,.55],[-.18,.85],[.02,.98],[.1,.74],[.24,.88],[.3,.6],[.44,.7],
+    [.44,.28],[.72,.18],[.96,.1],[.8,-.02],[.98,-.2],[.52,-.28],[.1,-.4],
+    [-.3,-.38],[-.62,-.22],[-.84,-.02]];
+  function drawGlyph(g, x, baseY, size){
+    if (g === 'dove'){
+      const r = size/2, cy = baseY - size*0.33, m = DOVE.length;
+      ctx.beginPath();
+      for (let i=0;i<m;i++){
+        const p0=DOVE[(i-1+m)%m], p1=DOVE[i], p2=DOVE[(i+1)%m], p3=DOVE[(i+2)%m];
+        for (let k=0;k<10;k++){
+          const t=k/10, t2=t*t, t3=t2*t;
+          const px = .5*((2*p1[0]) + (-p0[0]+p2[0])*t + (2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2 + (-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3);
+          const py = .5*((2*p1[1]) + (-p0[1]+p2[1])*t + (2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2 + (-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3);
+          const X = x + px*r, Y = cy - py*r;
+          if (i===0 && k===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
+        }
+      }
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.textAlign = 'center';
+      ctx.font = size + 'px serif';
+      ctx.fillText(GLYPH_CHAR[g] || '\u2665', x, baseY);
+    }
+  }
+
   function draw(){
     ctx.clearRect(0,0,W,cv.height);
     // vitrine ground
@@ -1708,9 +1745,8 @@ renderGrid(); applyDayNight(); paintCart();
       lines.forEach((ln, i) => ctx.fillText(ln, tx, ty + i * ts * 1.24));
     }
     if (st.glyph !== 'none' && SHAPE.glyphY){
-      ctx.fillStyle = inkTxt; ctx.textAlign='center';
-      ctx.font = st.gsize + 'px serif';
-      ctx.fillText(st.glyph==='heart' ? '♥' : '✡', tx, glyphYNow());
+      ctx.fillStyle = inkTxt;
+      drawGlyph(st.glyph, tx, glyphYNow(), st.gsize);
     }
     if (SHAPE.emboss){
       ctx.fillStyle = st.night? '#6B4A1A' : '#8A7A57'; ctx.textAlign='center';
@@ -1836,11 +1872,7 @@ renderGrid(); applyDayNight(); paintCart();
     document.querySelectorAll('.st-win2').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
     draw();
   });
-  document.querySelectorAll('.st-glyph').forEach(b => b.onclick = () => {
-    st.glyph = b.dataset.g;
-    document.querySelectorAll('.st-glyph').forEach(x=>x.setAttribute('aria-pressed', String(x===b)));
-    syncGlyphRows(); draw();
-  });
+  $('#stGlyph').onchange = e => { st.glyph = e.target.value; syncGlyphRows(); draw(); };
   // day/night
   $('#stDay').onclick  = () => { st.night=false; syncTog(); draw(); };
   $('#stNight').onclick= () => { st.night=true;  syncTog(); draw(); };
@@ -1902,7 +1934,7 @@ renderGrid(); applyDayNight(); paintCart();
     if (st.text) parts.push('כיתוב: "'+st.text.split('\n').slice(0,2).join(' / ')+'"');
     if (st.text) parts.push('גובה כיתוב: ~'+Math.round(effSize()*mmPerPx())+' מ״מ');
     parts.push('גופן: '+fontName);
-    if (st.glyph!=='none' && SHAPE.glyphY) parts.push('סמל: '+(st.glyph==='heart'?'לב':'מגן דוד')+' ~'+Math.round(st.gsize*mmPerPx())+' מ״מ');
+    if (st.glyph!=='none' && SHAPE.glyphY) parts.push('סמל: '+(GLYPH_NAME[st.glyph]||st.glyph)+' ~'+Math.round(st.gsize*mmPerPx())+' מ״מ');
     const wname = w => w==='heart' ? 'לב' : 'עגול';
     if (SHAPE.win2) parts.push('חלון ימין: ' + wname(st.winShape) + ' · חלון שמאל: ' + wname(st.winShape2));
     else parts.push('חלון: ' + wname(st.winShape));
