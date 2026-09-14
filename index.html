@@ -758,6 +758,10 @@ if (ORDER_HOOK){
 // back from the SUMIT payment page (?paid= on success, ?unpaid= on cancel)
 { const q = new URLSearchParams(location.search), paid = q.get('paid'), unpaid = q.get('unpaid');
   if (paid || unpaid){
+    const pid = q.get('OG-PaymentID');
+    if (paid && pid && ORDER_HOOK)
+      fetch(ORDER_HOOK, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, keepalive:true,
+                          body: JSON.stringify({ action:'paid', orderId: paid, paymentId: pid }) }).catch(() => {});
     history.replaceState(null, '', location.pathname + location.hash);
     window.addEventListener('load', () => toast(paid
       ? 'התשלום התקבל, תודה! מספר הזמנה ' + paid.slice(0, 20)
