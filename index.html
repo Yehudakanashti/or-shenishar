@@ -1232,7 +1232,8 @@ renderGrid(); applyDayNight(); paintCart();
                glyph:'heart', night:true, model:null, power:'battery', winShape:'circle', winShape2:'circle' };
 
   // silhouette per model family - the preview follows the chosen shape
-  const SHAPE_OF = { heart:'tablet', arch:'archtop', tablet:'plain', heart_full:'heart', disc:'circle',
+  const SHAPE_OF = { original:'sil_original', medium:'sil_medium', small:'sil_small', large:'sil_large',
+    heart:'tablet', arch:'archtop', tablet:'plain', heart_full:'heart', disc:'circle',
     flame:'flame', flame_heart:'flame', flame_slim:'flameslim',
     flame_twin:'flametwin', ner:'candle', bonfire:'flame',
     sefer:'book', sefer_open:'bookopen', kotel:'wall', couple:'couple' };
@@ -1428,6 +1429,22 @@ renderGrid(); applyDayNight(); paintCart();
     });
     ctx.stroke();
   };
+  // אבן הזיכרון and its sizes: the EXACT front silhouette of each printed
+  // stone (sections of variants/<id>/stone.stl, mm, generator frame) and its
+  // production layout - photo disc, dedication line, heart (make_stone CFG /
+  // make_original_sizes / make_variants). Owner 14.9.26: the preview must look
+  // like the stone that was printed.
+  const SIL = {"original":{"sw":86.21,"d":60.0,"cy":100.0,"cap":12.0,"tcy":55.0,"hh":10.0,"hcy":36.0,"w":86.21,"xmin":0.0,"h":160.0,"pts":[[0.0,5.0],[1.5,14.8],[0.7,66.5],[2.0,82.8],[2.0,92.0],[0.5,98.8],[0.2,110.5],[1.5,121.3],[1.0,144.0],[1.2,145.2],[2.5,145.4],[2.5,147.7],[9.7,150.5],[18.7,152.5],[24.0,151.7],[24.1,149.8],[26.2,149.7],[28.5,148.5],[34.5,148.8],[36.5,149.5],[41.0,149.0],[44.5,152.2],[51.1,155.5],[55.0,158.2],[63.2,158.5],[68.5,158.0],[73.0,160.0],[77.4,157.3],[84.2,158.2],[84.5,151.0],[86.0,145.2],[86.0,132.8],[84.7,127.0],[86.0,100.5],[85.0,93.0],[85.2,49.0],[84.7,46.2],[84.5,26.3],[85.5,20.5],[85.0,14.0],[86.2,5.0],[86.2,0.0],[0.0,0.0]]},"medium":{"sw":72.0,"d":50.0,"cy":84.0,"cap":8.0,"tcy":46.0,"hh":8.5,"hcy":29.0,"w":72.0,"xmin":0.0,"h":133.8,"pts":[[0.0,4.8],[1.8,16.5],[0.3,54.0],[0.6,65.7],[1.8,72.6],[1.8,88.8],[0.3,101.4],[0.3,111.9],[1.8,122.1],[5.8,122.1],[9.0,123.9],[13.9,124.2],[16.7,125.5],[16.8,127.8],[20.2,127.8],[28.6,130.2],[31.8,132.9],[39.6,132.9],[41.4,132.0],[47.1,132.3],[48.0,131.7],[48.2,130.5],[51.0,131.1],[53.9,129.6],[56.1,129.3],[60.0,131.1],[67.6,131.1],[68.1,133.8],[70.5,133.8],[70.2,114.6],[71.1,110.1],[70.5,78.6],[71.7,69.6],[71.1,31.8],[71.7,27.9],[71.4,8.7],[72.0,0.0],[0.0,0.0]]},"small":{"sw":60.0,"d":42.0,"cy":72.0,"cap":7.5,"tcy":40.0,"hh":7.0,"hcy":25.0,"w":60.0,"xmin":0.0,"h":114.7,"pts":[[0.0,0.0],[1.2,16.5],[1.2,34.2],[0.3,50.5],[0.3,63.3],[1.5,75.4],[1.2,89.2],[0.3,94.0],[0.9,103.3],[5.4,105.1],[9.6,104.8],[12.6,106.0],[18.4,105.7],[23.4,107.5],[27.3,106.6],[29.7,107.8],[32.8,107.8],[38.1,111.7],[41.2,112.0],[46.2,114.7],[59.1,113.5],[59.4,100.3],[58.5,79.9],[59.1,66.1],[58.5,55.2],[59.4,48.6],[59.1,37.2],[59.7,34.2],[59.7,24.6],[58.8,12.9],[59.4,10.8],[60.0,0.0]]},"large":{"sw":112.0,"d":78.0,"cy":140.0,"cap":15.0,"tcy":78.0,"hh":12.0,"hcy":54.0,"w":112.0,"xmin":0.0,"h":212.3,"pts":[[0.0,6.3],[2.4,21.0],[1.8,26.1],[2.4,41.1],[0.9,60.0],[1.2,87.0],[2.1,100.8],[0.3,113.7],[0.3,122.6],[1.5,129.2],[2.4,143.9],[2.1,160.1],[1.2,170.9],[1.5,181.1],[0.9,198.5],[10.8,203.3],[13.7,202.1],[15.3,202.1],[17.1,203.0],[20.7,203.0],[24.4,203.9],[27.0,205.4],[28.5,205.4],[31.4,203.6],[33.1,203.6],[38.4,206.6],[45.2,208.7],[48.0,210.8],[52.0,211.1],[54.0,212.3],[57.3,211.4],[60.7,211.7],[63.0,210.2],[65.5,210.2],[66.4,210.8],[68.8,210.5],[69.4,210.2],[69.8,207.3],[74.4,205.7],[79.0,207.2],[88.9,206.3],[91.6,207.8],[95.5,208.7],[97.9,208.7],[100.3,207.5],[104.8,207.5],[106.6,206.6],[110.8,207.2],[110.2,197.3],[110.5,175.4],[109.3,164.7],[109.3,156.2],[111.1,142.1],[111.1,131.0],[110.2,126.8],[110.5,108.9],[109.9,102.0],[110.2,91.4],[111.7,82.8],[111.7,78.3],[111.1,75.3],[111.4,52.2],[110.5,47.7],[110.8,40.8],[109.3,28.2],[110.5,22.8],[109.9,16.2],[112.0,6.3],[112.0,0.0],[0.0,0.0]]}};
+  function silShape(id){
+    const g = SIL[id], s = 560 / g.h, yb = H - 20, x0 = W/2 - (g.sw/2) * s;
+    const X = mm => x0 + mm * s, Y = mm => yb - mm * s;
+    const tdef = Math.round(g.cap * s / 0.7), gdef = Math.round(g.hh * s / 0.75);
+    return {
+      path(){ ctx.beginPath(); g.pts.forEach((q, i) => i ? ctx.lineTo(X(q[0]), Y(q[1])) : ctx.moveTo(X(q[0]), Y(q[1]))); ctx.closePath(); },
+      win:{ x:X(g.sw/2), y:Y(g.cy), r:g.d/2 * s },
+      textY: Y(g.tcy) + 0.28 * tdef, glyphY: Y(g.hcy) + 0.35 * gdef,
+      tdef, gdef, topY: Y(g.h), span: g.h * s, baseY: yb, baseW: g.w * s * 0.62 };
+  }
   // span = vertical extent of the silhouette in canvas px; used to translate
   // the model's real height into mm-per-px for the engraving-size floor
   const SHAPES = {
@@ -1448,6 +1465,7 @@ renderGrid(); applyDayNight(); paintCart();
     bookopen:{ path:bookOpenPath, win:{x:W*0.73, y:H*0.465, r:W*0.165}, textY:H*0.44, glyphY:H*0.62, textX:W*0.27, tscale:0.78, spine:true, topY:H*0.20, span:371, tdef:34 },
     couple:{ path:coupleWidePath, win:{x:W*0.69, y:H*0.47, r:W*0.185}, win2:{x:W*0.31, y:H*0.47, r:W*0.185}, textY:H*0.80, glyphY:H*0.88, topY:H*0.25, span:460, tdef:30, baseY:H-8, baseW:208 },
   };
+  ['original', 'medium', 'small', 'large'].forEach(id => { SHAPES['sil_' + id] = silShape(id); });
   let SHAPE = SHAPES.tablet;
 
   /* ---- engraving size floor: real mm per model, honest to production ---- */
@@ -1479,6 +1497,8 @@ renderGrid(); applyDayNight(); paintCart();
     if (!st.tsizeDirty) st.tsize = Math.max(minPx, SHAPE.tdef || 34);
     if (st.tsize < minPx) st.tsize = minPx;
     sl.value = st.tsize;
+    // the symbol follows the model's real heart size until the customer moves it
+    if (!st.gsizeDirty){ st.gsize = SHAPE.gdef || 30; $('#stGsize').value = st.gsize; }
     paintMm();
   }
 
@@ -1996,7 +2016,7 @@ renderGrid(); applyDayNight(); paintCart();
   $('#stGsize').oninput = e => {
     let g = +e.target.value;
     while (g > +e.target.min && !fitsAll(st.text, effSize(), st.toff, st.goff, g)) g--;
-    st.gsize = g; e.target.value = g; syncRanges(); draw(); };
+    st.gsize = g; st.gsizeDirty = true; e.target.value = g; syncRanges(); draw(); };
   $('#stGoff').oninput = e => { st.goff = +e.target.value; draw(); };
   const syncGlyphRows = () => {
     const show = st.glyph !== 'none' && !!SHAPE.glyphY;
