@@ -21,6 +21,7 @@ def connect() -> sqlite3.Connection:
 # עמודות שנוספו אחרי הגרסה הראשונה — מתווספות למסד קיים בלי למחוק נתונים
 MIGRATIONS = {
     "products": {"occasion": "TEXT NOT NULL DEFAULT \'\'",
+                 "avoid": "TEXT NOT NULL DEFAULT \'\'",
                  "season_start": "TEXT NOT NULL DEFAULT \'\'",
                  "season_end": "TEXT NOT NULL DEFAULT \'\'"},
 }
@@ -156,7 +157,7 @@ def upsert_product(data: dict[str, Any], product_id: int | None = None) -> int:
     fields = (
         "slug", "name", "line", "tagline", "description", "audience", "price_from",
         "price_to", "lead_time", "shipping", "customization", "order_url", "keywords",
-        "occasion", "season_start", "season_end", "notes", "active",
+        "occasion", "season_start", "season_end", "avoid", "notes", "active",
     )
     payload = {k: data.get(k) for k in fields}
     payload["keywords"] = json.dumps(data.get("keywords") or [], ensure_ascii=False)

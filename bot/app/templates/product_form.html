@@ -45,6 +45,12 @@
       <label for="keywords">מילות מפתח (מופרדות בפסיק)</label>
       <textarea id="keywords" name="keywords" placeholder="מתנה לאמא, זיכרון, הנצחה, תמונה">{{ product.keywords|join(', ') if product else '' }}</textarea>
     </div>
+    <div class="field">
+      <label for="avoid">אסור להזכיר</label>
+      <textarea id="avoid" name="avoid" placeholder="למשל: סוג התאורה ומקור הכוח; זמני אספקה">{{ product.avoid if product else '' }}</textarea>
+    </div>
+    <p class="sub">הוראה קשיחה לבוט — מה שנכתב כאן לא ייצא ממנו בשום ניסוח, פומבי או פרטי.</p>
+
     <div class="field"><label for="notes">הערות פנימיות (הבוט רואה, לא מצטט)</label><textarea id="notes" name="notes">{{ product.notes if product else '' }}</textarea></div>
     <div class="check"><input type="checkbox" id="active" name="active" {{ 'checked' if (not product) or product.active }}><label for="active">מוצר פעיל</label></div>
 

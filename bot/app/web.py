@@ -122,6 +122,7 @@ def create_app() -> Flask:
             "occasion": request.form.get("occasion", "").strip(),
             "season_start": request.form.get("season_start", "").strip(),
             "season_end": request.form.get("season_end", "").strip(),
+            "avoid": request.form.get("avoid", "").strip(),
             "notes": request.form.get("notes", "").strip(),
             "active": 1 if request.form.get("active") else 0,
         }

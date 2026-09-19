@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS products (
   order_url     TEXT NOT NULL DEFAULT '',
   keywords      TEXT NOT NULL DEFAULT '[]',
   occasion      TEXT NOT NULL DEFAULT '',
+  avoid         TEXT NOT NULL DEFAULT '',
   season_start  TEXT NOT NULL DEFAULT '',
   season_end    TEXT NOT NULL DEFAULT '',
   notes         TEXT NOT NULL DEFAULT '',
