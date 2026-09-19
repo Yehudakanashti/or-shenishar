@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}הגדרות{% endblock %}
+{% block body %}
+
+<form method="post" action="{{ url_for('settings_save') }}">
+  <div class="card">
+    <h2>מצב הפעלה</h2>
+    <p class="sub">בהתחלה הכול עובר דרככם. כשתראו סדרה של ניסוחים טובים, אפשר יהיה להרחיב.</p>
+    <div class="check">
+      <input type="checkbox" id="auto_mode" name="auto_mode" {{ 'checked' if settings.auto_mode == 'on' }}>
+      <label for="auto_mode">AUTO ON — הרחבת אוטומציה (פוסטים שנוגעים באובדן תמיד יעברו אישור שלכם, גם כשזה דלוק)</label>
+    </div>
+    <div class="check">
+      <input type="checkbox" id="kill_switch" name="kill_switch" {{ 'checked' if settings.kill_switch == 'on' }}>
+      <label for="kill_switch">עצירת חירום — הבוט מפסיק לקלוט פוסטים</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>בולמי נזק</h2>
+    <p class="sub">הגבולות שמונעים מהבוט להיראות כמו ספאם.</p>
+    <div class="row">
+      <div class="field"><label for="daily_cap">תקרת הצעות ליום</label><input type="number" id="daily_cap" name="daily_cap" value="{{ settings.daily_cap }}"></div>
+      <div class="field"><label for="author_cooldown_days">המתנה בין פניות לאותו אדם (ימים)</label><input type="number" id="author_cooldown_days" name="author_cooldown_days" value="{{ settings.author_cooldown_days }}"></div>
+      <div class="field"><label for="min_confidence">סף ביטחון (0 עד 1)</label><input type="text" id="min_confidence" name="min_confidence" value="{{ settings.min_confidence }}"></div>
+      <div class="field"><label for="max_comment_chars">אורך מקסימלי לתגובה</label><input type="number" id="max_comment_chars" name="max_comment_chars" value="{{ settings.max_comment_chars }}"></div>
+    </div>
+    <div class="check">
+      <input type="checkbox" id="allow_links_in_comment" name="allow_links_in_comment" {{ 'checked' if settings.allow_links_in_comment == 'on' }}>
+      <label for="allow_links_in_comment">לאפשר קישורים בתגובה הציבורית (ברירת המחדל: לא — קישורים בתגובות נתפסים כספאם)</label>
+    </div>
+    <div class="field" style="max-width:320px">
+      <label for="address_form">לשון פנייה</label>
+      <select id="address_form" name="address_form">
+        <option value="auto" {{ 'selected' if settings.address_form == 'auto' }}>אוטומטי לפי הכותב/ת</option>
+        <option value="feminine" {{ 'selected' if settings.address_form == 'feminine' }}>נקבה תמיד</option>
+        <option value="masculine" {{ 'selected' if settings.address_form == 'masculine' }}>זכר תמיד</option>
+        <option value="neutral" {{ 'selected' if settings.address_form == 'neutral' }}>ניטרלי תמיד</option>
+      </select>
+    </div>
+    <button class="btn primary" type="submit">שמור הגדרות</button>
+  </div>
+</form>
+
+<div class="card">
+  <h2>החרגות</h2>
+  <p class="sub">קבוצה, אדם או מילה שגורמים לבוט לדלג אוטומטית.</p>
+  <form method="post" action="{{ url_for('blocklist_add') }}" class="row">
+    <div class="field">
+      <label for="kind">סוג</label>
+      <select id="kind" name="kind"><option value="group">קבוצה</option><option value="author">אדם</option><option value="keyword">מילה בפוסט</option></select>
+    </div>
+    <div class="field"><label for="value">ערך</label><input type="text" id="value" name="value" required></div>
+    <div class="field"><label for="note">הערה</label><input type="text" id="note" name="note"></div>
+    <div class="field" style="align-self:end"><button class="btn" type="submit">הוסף</button></div>
+  </form>
+  {% if blocklist %}
+    <table>
+      <tr><th>סוג</th><th>ערך</th><th>הערה</th><th></th></tr>
+      {% for b in blocklist %}
+      <tr>
+        <td>{% if b.kind == 'group' %}קבוצה{% elif b.kind == 'author' %}אדם{% else %}מילה{% endif %}</td>
+        <td>{{ b.value }}</td><td class="sub" style="margin:0">{{ b.note }}</td>
+        <td><form method="post" action="{{ url_for('blocklist_delete', block_id=b.id) }}"><button class="btn small danger" type="submit">הסר</button></form></td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>דוגמאות טון</h2>
+  <p class="sub">כל ניסוח שאישרתם נשמר כאן והבוט לומד ממנו. אפשר גם להוסיף ידנית ניסוחים אמיתיים שכתבתם בעבר — זה הדבר היחיד שבאמת גורם לו להישמע כמוכם.</p>
+  <form method="post" action="{{ url_for('example_add') }}">
+    <div class="row">
+      <div class="field">
+        <label for="ex_kind">סוג</label>
+        <select id="ex_kind" name="kind"><option value="comment">תגובה ציבורית</option><option value="dm">הודעה בפרטי</option></select>
+      </div>
+      <div class="field" style="flex:3"><label for="ex_text">הניסוח</label><input type="text" id="ex_text" name="text" required placeholder="שלחתי לך פרטים בפרטי 🙂"></div>
+      <div class="field" style="align-self:end"><button class="btn" type="submit">הוסף</button></div>
+    </div>
+  </form>
+  {% if examples %}
+    <table>
+      <tr><th>סוג</th><th>טקסט</th><th>מקור</th><th></th></tr>
+      {% for e in examples %}
+      <tr>
+        <td>{{ 'תגובה' if e.kind == 'comment' else 'פרטי' }}</td>
+        <td>{{ e.text }}</td>
+        <td class="mono">{{ e.origin }}</td>
+        <td><form method="post" action="{{ url_for('example_delete', example_id=e.id) }}"><button class="btn small danger" type="submit">הסר</button></form></td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>חיבורים</h2>
+  <table>
+    <tr><td>Claude</td><td>{% if ai_on %}<span class="badge good">מחובר</span> <span class="mono">{{ model }}</span>{% else %}<span class="badge bad">לא מחובר</span> — הוסיפו ANTHROPIC_API_KEY ב-.env{% endif %}</td></tr>
+    <tr><td>דף פייסבוק</td><td>{% if fb_on %}<span class="badge good">מחובר</span>{% else %}<span class="badge">לא מחובר</span> — כשיהיה דף, מלאו FB_PAGE_ID ו-FB_PAGE_TOKEN ב-.env{% endif %}</td></tr>
+  </table>
+</div>
+{% endblock %}

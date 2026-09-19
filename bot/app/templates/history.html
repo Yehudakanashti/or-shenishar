@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}היסטוריה{% endblock %}
+{% block body %}
+<div class="card">
+  <h2>הצעות שהוכרעו</h2>
+  {% if not decided %}<p class="sub">עדיין לא אושרה או נדחתה אף הצעה.</p>{% endif %}
+  {% if decided %}
+  <table>
+    <tr><th>#</th><th>סטטוס</th><th>קבוצה</th><th>הטקסט שאושר</th><th>מתי</th></tr>
+    {% for s in decided %}
+    <tr>
+      <td><a href="{{ url_for('suggestion', suggestion_id=s.id) }}">{{ s.id }}</a></td>
+      <td><span class="badge {{ 'good' if s.status == 'approved' else 'bad' }}">{{ 'אושרה' if s.status == 'approved' else 'נדחתה' }}</span></td>
+      <td>{{ s.post.group_name }}</td>
+      <td>{{ (s.final_comment or s.comment_text)[:90] }}</td>
+      <td class="mono">{{ s.decided_at or s.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>יומן פעולות</h2>
+  <p class="sub">כל מה שהמערכת עשתה, כולל מה שנחסם ולמה.</p>
+  <table>
+    <tr><th>מתי</th><th>סוג</th><th>תיאור</th></tr>
+    {% for e in events %}
+    <tr>
+      <td class="mono">{{ e.created_at }}</td>
+      <td><span class="badge {{ 'bad' if e.kind in ('blocked','ai_error','rejected') else ('good' if e.kind == 'approved' else '') }}">{{ e.kind }}</span></td>
+      <td>{{ e.summary }}{% if e.payload.detail %} <span class="sub">— {{ e.payload.detail }}</span>{% endif %}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="3" class="empty">אין עדיין פעולות.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

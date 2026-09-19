@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}מוצרים{% endblock %}
+{% block body %}
+<div class="card">
+  <h2>מוצרים</h2>
+  <p class="sub">כל מה שכתוב כאן הוא מה שהבוט יודע. מה שלא כאן — הוא לא יזכיר.</p>
+  <a class="btn primary" href="{{ url_for('product_new') }}">מוצר חדש</a>
+</div>
+
+{% if not products %}
+  <div class="card empty">אין עדיין מוצרים.</div>
+{% endif %}
+
+<div class="grid">
+{% for p in products %}
+  <div class="card" style="margin:0">
+    {% set primary = p.images[0] if p.images else None %}
+    {% if primary %}
+      <img src="{{ url_for('uploads', filename=primary.filename) }}" alt="" style="width:100%; height:130px; object-fit:cover; border-radius:10px; margin-bottom:10px">
+    {% endif %}
+    <h2 style="font-size:15px">{{ p.name }}</h2>
+    <p class="sub">{{ p.tagline or p.description[:90] }}</p>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px">
+      <span class="badge {{ 'good' if p.active else 'bad' }}">{{ 'פעיל' if p.active else 'כבוי' }}</span>
+      <span class="badge">{{ p.images|length }} תמונות</span>
+      <span class="badge">{{ p.keywords|length }} מילות מפתח</span>
+    </div>
+    <a class="btn small" href="{{ url_for('product_edit', product_id=p.id) }}">עריכה</a>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

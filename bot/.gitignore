@@ -1,0 +1,10 @@
+.env
+data/bot.db
+data/bot.db-wal
+data/bot.db-shm
+data/uploads/*
+!data/uploads/.gitkeep
+venv/
+.venv/
+__pycache__/
+*.pyc

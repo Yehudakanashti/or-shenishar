@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}מנוע התגובות{% endblock %} · {{ business.name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">{{ business.name }}<small>מנוע התגובות</small></div>
+    <nav>
+      <a href="{{ url_for('queue') }}" class="{{ 'on' if request.endpoint == 'queue' }}">
+        תור אישורים{% if pending_count %} <span class="pill">{{ pending_count }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for('products') }}" class="{{ 'on' if request.endpoint in ('products','product_edit','product_new') }}">מוצרים</a>
+      <a href="{{ url_for('settings') }}" class="{{ 'on' if request.endpoint == 'settings' }}">הגדרות</a>
+      <a href="{{ url_for('history') }}" class="{{ 'on' if request.endpoint == 'history' }}">היסטוריה</a>
+    </nav>
+  </div>
+</header>
+<main>
+  {% if kill_switch %}
+    <div class="flash warn">עצירת חירום פעילה — הבוט לא קולט פוסטים חדשים. אפשר לכבות בהגדרות.</div>
+  {% endif %}
+  {% if not ai_on %}
+    <div class="flash warn">אין מפתח Claude ב-<span class="mono">.env</span> — הניסוחים כרגע תבניתיים ולא אמיתיים. הוסיפו <span class="mono">ANTHROPIC_API_KEY</span> והפעילו מחדש.</div>
+  {% endif %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block body %}{% endblock %}
+</main>
+<script>
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('[data-copy]');
+  if (!btn) return;
+  const src = document.querySelector(btn.dataset.copy);
+  if (!src) return;
+  const text = src.value !== undefined ? src.value : src.innerText;
+  navigator.clipboard.writeText(text.trim()).then(function () {
+    const old = btn.innerText;
+    btn.innerText = 'הועתק ✓';
+    setTimeout(function () { btn.innerText = old; }, 1600);
+  });
+});
+</script>
+</body>
+</html>

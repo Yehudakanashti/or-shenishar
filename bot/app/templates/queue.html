@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}תור אישורים{% endblock %}
+{% block body %}
+
+<div class="stats">
+  <div class="stat"><b>{{ stats.pending }}</b><span>ממתינות לאישור</span></div>
+  <div class="stat"><b>{{ stats.approved }}</b><span>אושרו</span></div>
+  <div class="stat"><b>{{ stats.rejected }}</b><span>נדחו</span></div>
+  <div class="stat"><b>{{ used_today }}/{{ cap }}</b><span>הצעות היום</span></div>
+  <div class="stat"><b>{{ stats.products }}</b><span>מוצרים פעילים</span></div>
+  <div class="stat"><b>{{ stats.examples }}</b><span>דוגמאות טון</span></div>
+</div>
+
+<div class="card">
+  <h2>פוסט חדש מקבוצה</h2>
+  <p class="sub">הדביקו את גוף הפוסט. הבוט יזהה את הכוונה, יבחר מוצר ותמונה, וינסח תגובה והודעת פתיחה — הכול ממתין לאישור שלכם.</p>
+  <form method="post" action="{{ url_for('ingest') }}">
+    <div class="field">
+      <label for="text">תוכן הפוסט</label>
+      <textarea id="text" name="text" required placeholder="מחפשת מתנה מיוחדת לאמא שלי, משהו אישי שיישאר..."></textarea>
+    </div>
+    <div class="row">
+      <div class="field"><label for="group_name">שם הקבוצה</label><input type="text" id="group_name" name="group_name" placeholder="אמהות ממליצות"></div>
+      <div class="field"><label for="author_name">מי כתב/ה</label><input type="text" id="author_name" name="author_name" placeholder="שם מהפוסט"></div>
+      <div class="field"><label for="url">קישור לפוסט</label><input type="url" id="url" name="url" placeholder="https://facebook.com/..."></div>
+    </div>
+    <button class="btn primary" type="submit">נסח תגובה</button>
+  </form>
+</div>
+
+<h2 style="font-size:16px; margin:22px 0 12px">ממתינות לאישור</h2>
+
+{% if not suggestions %}
+  <div class="card empty">אין הצעות ממתינות. הדביקו פוסט למעלה כדי להתחיל.</div>
+{% endif %}
+
+{% for s in suggestions %}
+  <div class="item">
+    <div class="meta">
+      <span class="badge accent">#{{ s.id }}</span>
+      {% if not s.relevant %}<span class="badge bad">לא רלוונטי לדעת הבוט</span>{% endif %}
+      {% if s.sensitivity == 'bereavement' %}<span class="badge warn">אובדן — דורש אישור תמיד</span>{% endif %}
+      {% if s.needs_human and s.relevant and s.sensitivity != 'bereavement' %}<span class="badge warn">דורש תשומת לב</span>{% endif %}
+      <span class="badge">{{ intent_labels.get(s.intent, s.intent) }}</span>
+      <span>ביטחון {{ '%.0f'|format(s.confidence * 100) }}%</span>
+      {% if s.post.group_name %}<span>· {{ s.post.group_name }}</span>{% endif %}
+      {% if s.post.author_name %}<span>· {{ s.post.author_name }}</span>{% endif %}
+      <span>· {{ s.created_at }}</span>
+    </div>
+    <p class="post">{{ s.post.text[:260] }}{% if s.post.text|length > 260 %}…{% endif %}</p>
+    {% if s.comment_text %}<div class="draft">{{ s.comment_text }}</div>{% endif %}
+    <div class="actions">
+      <a class="btn primary small" href="{{ url_for('suggestion', suggestion_id=s.id) }}">פתח ואשר</a>
+      <form method="post" action="{{ url_for('reject', suggestion_id=s.id) }}">
+        <button class="btn danger small" type="submit">דחה</button>
+      </form>
+      {% if s.product %}<span class="badge">{{ s.product.name }}</span>{% endif %}
+    </div>
+  </div>
+{% endfor %}
+{% endblock %}

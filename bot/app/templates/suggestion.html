@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}הצעה #{{ s.id }}{% endblock %}
+{% block body %}
+
+<div class="card">
+  <div class="meta" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px">
+    <span class="badge accent">#{{ s.id }}</span>
+    <span class="badge {{ 'good' if s.status == 'approved' else ('bad' if s.status == 'rejected' else '') }}">
+      {% if s.status == 'pending' %}ממתינה{% elif s.status == 'approved' %}אושרה{% else %}נדחתה{% endif %}
+    </span>
+    <span class="badge">{{ intent_labels.get(s.intent, s.intent) }}</span>
+    <span class="badge">{{ sensitivity_labels.get(s.sensitivity, s.sensitivity) }}</span>
+    <span class="badge">ביטחון {{ '%.0f'|format(s.confidence * 100) }}%</span>
+    <span class="mono">{{ s.engine }}</span>
+  </div>
+
+  <h2>הפוסט</h2>
+  <div class="quote">{{ s.post.text }}</div>
+  <p class="sub" style="margin-top:10px">
+    {% if s.post.group_name %}{{ s.post.group_name }} · {% endif %}
+    {% if s.post.author_name %}{{ s.post.author_name }} · {% endif %}
+    {{ s.created_at }}
+    {% if s.post.url %} · <a href="{{ s.post.url }}" target="_blank" rel="noopener">לפוסט בפייסבוק</a>{% endif %}
+  </p>
+
+  {% if s.reasoning %}
+    <hr>
+    <h2>למה הבוט בחר ככה</h2>
+    <p class="sub" style="margin:0">{{ s.reasoning }}</p>
+  {% endif %}
+
+  {% if s.policy_notes %}
+    <ul class="notes">
+      {% for note in s.policy_notes %}<li>{{ note }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+</div>
+
+<form method="post" action="{{ url_for('approve', suggestion_id=s.id) }}">
+  <div class="card">
+    <h2>התגובה הציבורית</h2>
+    <p class="sub">בלי מחירים, בלי קישורים. ערכו כרצונכם — מה שתאשרו ילמד את הבוט לכתוב בסגנון שלכם.</p>
+    <textarea name="comment" id="comment">{{ s.final_comment or s.comment_text }}</textarea>
+    <div class="actions">
+      <button class="btn small" type="button" data-copy="#comment">העתק תגובה</button>
+    </div>
+
+    <hr>
+    <h2>הודעת הפתיחה בפרטי</h2>
+    <p class="sub">הודעה אחת שפותחת שיחה. משם אתם ממשיכים ידנית.</p>
+    <textarea name="dm" id="dm">{{ s.final_dm or s.dm_text }}</textarea>
+    <div class="actions">
+      <button class="btn small" type="button" data-copy="#dm">העתק הודעה</button>
+    </div>
+
+    <div class="actions" style="margin-top:18px">
+      <button class="btn primary" type="submit">אשר ושמור</button>
+    </div>
+  </div>
+</form>
+
+<div class="card">
+  <h2>המוצר והתמונה</h2>
+  {% if s.product %}
+    <p class="sub">נבחר: <b>{{ s.product.name }}</b></p>
+  {% else %}
+    <p class="sub">לא נבחר מוצר.</p>
+  {% endif %}
+  {% if s.image %}
+    <div class="thumbs" style="margin-bottom:14px">
+      <div class="thumb is-primary"><img src="{{ url_for('uploads', filename=s.image.filename) }}" alt=""></div>
+    </div>
+  {% endif %}
+  <form method="post" action="{{ url_for('change_media', suggestion_id=s.id) }}" class="row">
+    <div class="field">
+      <label for="product_id">החלפת מוצר</label>
+      <select name="product_id" id="product_id">
+        <option value="">— ללא —</option>
+        {% for p in products %}
+          <option value="{{ p.id }}" {{ 'selected' if s.product_id == p.id }}>{{ p.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="image_id">החלפת תמונה</label>
+      <select name="image_id" id="image_id">
+        <option value="">— ללא —</option>
+        {% for p in products %}
+          {% for img in p.images %}
+            <option value="{{ img.id }}" {{ 'selected' if s.image_id == img.id }}>{{ p.name }} — {{ img.caption or img.filename[:8] }}</option>
+          {% endfor %}
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field" style="align-self:end"><button class="btn" type="submit">עדכן</button></div>
+  </form>
+</div>
+
+<form method="post" action="{{ url_for('reject', suggestion_id=s.id) }}">
+  <div class="card">
+    <h2>דחייה</h2>
+    <p class="sub">הפוסט לא יוצע שוב. אפשר לכתוב למה — זה נשמר בהיסטוריה.</p>
+    <div class="field"><input type="text" name="reason" placeholder="למשל: לא מתאים לקבוצה הזו"></div>
+    <button class="btn danger" type="submit">דחה את ההצעה</button>
+  </div>
+</form>
+
+<p><a href="{{ url_for('queue') }}">← חזרה לתור</a></p>
+{% endblock %}

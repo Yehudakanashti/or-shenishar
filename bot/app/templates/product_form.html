@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name if product else 'מוצר חדש' }}{% endblock %}
+{% block body %}
+<form method="post" action="{{ url_for('product_save') }}">
+  {% if product %}<input type="hidden" name="id" value="{{ product.id }}">{% endif %}
+  <div class="card">
+    <h2>{{ product.name if product else 'מוצר חדש' }}</h2>
+    <p class="sub">ככל שהתיאור מדויק יותר, כך התגובות של הבוט מדויקות יותר.</p>
+
+    <div class="row">
+      <div class="field"><label for="name">שם המוצר</label><input type="text" id="name" name="name" required value="{{ product.name if product else '' }}"></div>
+      <div class="field"><label for="slug">מזהה באנגלית</label><input type="text" id="slug" name="slug" value="{{ product.slug if product else '' }}" placeholder="memorial-stone"></div>
+      <div class="field">
+        <label for="line">קו מוצר</label>
+        <select id="line" name="line">
+          <option value="memorial" {{ 'selected' if product and product.line == 'memorial' }}>זיכרון והנצחה</option>
+          <option value="gift" {{ 'selected' if product and product.line == 'gift' }}>מתנות</option>
+          <option value="other" {{ 'selected' if product and product.line == 'other' }}>אחר</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field"><label for="tagline">משפט פתיחה</label><input type="text" id="tagline" name="tagline" value="{{ product.tagline if product else '' }}"></div>
+    <div class="field"><label for="description">תיאור מלא</label><textarea id="description" name="description">{{ product.description if product else '' }}</textarea></div>
+    <div class="field"><label for="audience">למי מתאים</label><input type="text" id="audience" name="audience" value="{{ product.audience if product else '' }}" placeholder="משפחות שאיבדו אדם קרוב, מתנה להורים"></div>
+
+    <div class="row">
+      <div class="field"><label for="price_from">מחיר מ־ (₪)</label><input type="number" id="price_from" name="price_from" value="{{ product.price_from if product and product.price_from else '' }}"></div>
+      <div class="field"><label for="price_to">מחיר עד (₪)</label><input type="number" id="price_to" name="price_to" value="{{ product.price_to if product and product.price_to else '' }}"></div>
+      <div class="field"><label for="lead_time">זמן ייצור</label><input type="text" id="lead_time" name="lead_time" value="{{ product.lead_time if product else '' }}" placeholder="מספר ימי עסקים"></div>
+    </div>
+    <p class="sub">המחיר נשמר לשימוש שלכם ולשיחות בפרטי. הבוט לעולם לא יכתוב אותו בתגובה ציבורית.</p>
+
+    <div class="field"><label for="shipping">משלוח</label><input type="text" id="shipping" name="shipping" value="{{ product.shipping if product else '' }}"></div>
+    <div class="field"><label for="customization">אפשרויות התאמה אישית</label><textarea id="customization" name="customization">{{ product.customization if product else '' }}</textarea></div>
+    <div class="field"><label for="order_url">קישור להזמנה</label><input type="url" id="order_url" name="order_url" value="{{ product.order_url if product else '' }}"></div>
+    <div class="field">
+      <label for="keywords">מילות מפתח (מופרדות בפסיק)</label>
+      <textarea id="keywords" name="keywords" placeholder="מתנה לאמא, זיכרון, הנצחה, תמונה">{{ product.keywords|join(', ') if product else '' }}</textarea>
+    </div>
+    <div class="field"><label for="notes">הערות פנימיות (הבוט רואה, לא מצטט)</label><textarea id="notes" name="notes">{{ product.notes if product else '' }}</textarea></div>
+    <div class="check"><input type="checkbox" id="active" name="active" {{ 'checked' if (not product) or product.active }}><label for="active">מוצר פעיל</label></div>
+
+    <div class="actions">
+      <button class="btn primary" type="submit">שמור</button>
+      <a class="btn" href="{{ url_for('products') }}">ביטול</a>
+    </div>
+  </div>
+</form>
+
+{% if product %}
+<div class="card">
+  <h2>תמונות</h2>
+  <p class="sub">התמונה הראשית היא זו שהבוט יציע לצרף. אפשר להעלות כמה בבת אחת.</p>
+  <form method="post" action="{{ url_for('product_images', product_id=product.id) }}" enctype="multipart/form-data">
+    <div class="row">
+      <div class="field"><label for="images">קבצים (jpg, png, webp)</label><input type="file" id="images" name="images" accept=".jpg,.jpeg,.png,.webp" multiple></div>
+      <div class="field"><label for="caption">כיתוב</label><input type="text" id="caption" name="caption" placeholder="אבן מוארת בלילה"></div>
+      <div class="field" style="align-self:end"><button class="btn" type="submit">העלה</button></div>
+    </div>
+  </form>
+
+  <div class="thumbs" style="margin-top:14px">
+    {% for img in product.images %}
+      <div class="thumb {{ 'is-primary' if img.is_primary }}">
+        <img src="{{ url_for('uploads', filename=img.filename) }}" alt="{{ img.caption }}">
+        <div class="t-bar">
+          {% if not img.is_primary %}
+            <form method="post" action="{{ url_for('image_primary', image_id=img.id) }}"><button class="btn small" type="submit">ראשית</button></form>
+          {% else %}
+            <span class="badge accent">ראשית</span>
+          {% endif %}
+          <form method="post" action="{{ url_for('image_delete', image_id=img.id) }}"><button class="btn small danger" type="submit">מחק</button></form>
+        </div>
+      </div>
+    {% else %}
+      <p class="sub">עדיין אין תמונות למוצר הזה.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<form method="post" action="{{ url_for('product_delete', product_id=product.id) }}">
+  <div class="card">
+    <h2>מחיקת המוצר</h2>
+    <p class="sub">המוצר והתמונות שלו יימחקו לצמיתות.</p>
+    <button class="btn danger" type="submit">מחק את {{ product.name }}</button>
+  </div>
+</form>
+{% endif %}
+{% endblock %}
