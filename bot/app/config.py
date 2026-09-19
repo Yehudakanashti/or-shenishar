@@ -26,10 +26,11 @@ TIMEZONE = "Asia/Jerusalem"
 ALLOWED_IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp"}
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
-BUSINESS = {
-    "name": "אור שנשאר",
-    "what": "אבני זיכרון מוארות בהזמנה אישית, מיוצרות סביב תמונה של אדם אהוב",
-    "site": "https://or-shenishar.co.il",
+# ברירת מחדל בלבד — הערכים האמיתיים נערכים במסך ההגדרות ונשמרים במסד
+BUSINESS_DEFAULTS = {
+    "business_name": "אור שנשאר",
+    "business_what": "",
+    "business_site": "",
 }
 
 # ברירות מחדל שנכתבות לטבלת settings בהתקנה ראשונה
@@ -42,6 +43,8 @@ DEFAULT_SETTINGS = {
     "allow_links_in_comment": "0",  # 0 = בלי קישורים בתגובה ציבורית
     "max_comment_chars": "320",
     "address_form": "auto",         # auto | feminine | masculine | neutral
+    "season_lead_days": "21",       # כמה ימים לפני תחילת העונה מוצר נחשב רלוונטי
+    **BUSINESS_DEFAULTS,
 }
 
 

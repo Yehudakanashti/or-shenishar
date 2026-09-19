@@ -9,8 +9,8 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 from . import db
-from .config import ANTHROPIC_API_KEY, BUSINESS, CLAUDE_MODEL, ai_enabled
-from .matching import best_product
+from .config import ANTHROPIC_API_KEY, CLAUDE_MODEL, ai_enabled
+from .matching import best_product, season_state
 
 Intent = Literal[
     "gift_search",
@@ -62,7 +62,7 @@ class Analysis(BaseModel):
     dm_opener: str
 
 
-RULES = """אתה עוזר הניסוח של עסק קטן בישראל בשם "{name}" — {what}.
+RULES = """אתה עוזר הניסוח של עסק קטן בישראל בשם "{name}".{what}
 
 המשימה: לקרוא פוסט מקבוצת פייסבוק, להחליט אם הוא רלוונטי לעסק, ואם כן לנסח
 תגובה ציבורית קצרה והודעת פתיחה לפרטי. אתה לא מפרסם כלום — בעל העסק קורא
@@ -85,6 +85,7 @@ RULES = """אתה עוזר הניסוח של עסק קטן בישראל בשם "
    הצעה לשלוח פרטים בפרטי. שום דבר מעבר.
 3. אל תמציא פרטים על המוצר. מה שלא כתוב בקטלוג למטה — לא קיים.
 4. אל תבטיח זמני אספקה, מלאי או התאמות שלא מופיעים בקטלוג.
+   אם למוצר יש חלון עונה שכבר נגמר — אל תציע אותו.
 5. עברית יומיומית ותקנית. לא תרגומית, לא מליצית.
 6. {address_form}
 
@@ -121,6 +122,11 @@ def _catalog_block(products: list[dict[str, Any]]) -> str:
             lines.append(f"זמן ייצור: {p['lead_time']}")
         if p.get("shipping"):
             lines.append(f"משלוח: {p['shipping']}")
+        if p.get("occasion"):
+            state = {"active": "העונה עכשיו", "soon": "העונה מתקרבת",
+                     "far": "העונה עוד רחוקה", "past": "העונה עברה — לא להציע",
+                     "always": "רלוונטי כל השנה"}[season_state(p)]
+            lines.append(f"אירוע/עונה: {p['occasion']} ({state})")
         if p.get("keywords"):
             lines.append("מילות מפתח: " + ", ".join(p["keywords"]))
         if p.get("notes"):
@@ -145,7 +151,9 @@ def _examples_block() -> str:
 
 def build_system_prompt(products: list[dict[str, Any]]) -> list[dict[str, Any]]:
     address_form = ADDRESS_FORMS.get(db.get_setting("address_form", "auto"), ADDRESS_FORMS["auto"])
-    stable = RULES.format(name=BUSINESS["name"], what=BUSINESS["what"], address_form=address_form)
+    identity = db.business()
+    what = f" {identity['business_what'].strip()}" if identity["business_what"].strip() else ""
+    stable = RULES.format(name=identity["business_name"], what=what, address_form=address_form)
     stable += "\n\n" + _catalog_block(products)
     blocks: list[dict[str, Any]] = [
         {"type": "text", "text": stable, "cache_control": {"type": "ephemeral"}}
@@ -171,6 +179,7 @@ def _template_analysis(text: str, products: list[dict[str, Any]]) -> Analysis:
     product = best_product(text, products)
     slug = product["slug"] if product else ""
     name = product["name"] if product else "מה שאנחנו עושים"
+    business_name = db.business()["business_name"]
     return Analysis(
         relevant=bool(product),
         intent="general_interest",
@@ -182,7 +191,7 @@ def _template_analysis(text: str, products: list[dict[str, Any]]) -> Analysis:
         needs_human=True,
         reasoning="נוסח תבניתי — אין מפתח Claude מוגדר, אז לא בוצע ניתוח אמיתי.",
         comment=f"יש לנו כמה אפשרויות שיכולות להתאים ({name}). אם תרצו, אשמח לשלוח פרטים בפרטי.",
-        dm_opener="היי, ראיתי את הפוסט שלך. אנחנו מייצרים אבני זיכרון מוארות בהזמנה אישית סביב תמונה. למי זה מיועד?",
+        dm_opener=f"היי, ראיתי את הפוסט שלך. אני מ{business_name} — נראה לי שיש לנו משהו שיכול להתאים. למי זה מיועד?",
     )
 
 

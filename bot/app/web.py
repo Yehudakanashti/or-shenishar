@@ -9,7 +9,7 @@ from flask import (
 
 from . import ai, db, engine
 from .config import (
-    ALLOWED_IMAGE_EXT, BUSINESS, CLAUDE_MODEL, DEFAULT_SETTINGS, MAX_IMAGE_BYTES,
+    ALLOWED_IMAGE_EXT, CLAUDE_MODEL, DEFAULT_SETTINGS, MAX_IMAGE_BYTES,
     UPLOAD_DIR, ai_enabled, facebook_enabled,
 )
 
@@ -22,7 +22,7 @@ def create_app() -> Flask:
     @app.context_processor
     def globals_for_templates() -> dict:
         return {
-            "business": BUSINESS,
+            "business": db.business(),
             "ai_on": ai_enabled(),
             "fb_on": facebook_enabled(),
             "model": CLAUDE_MODEL,
@@ -119,6 +119,9 @@ def create_app() -> Flask:
             "customization": request.form.get("customization", "").strip(),
             "order_url": request.form.get("order_url", "").strip(),
             "keywords": keywords,
+            "occasion": request.form.get("occasion", "").strip(),
+            "season_start": request.form.get("season_start", "").strip(),
+            "season_end": request.form.get("season_end", "").strip(),
             "notes": request.form.get("notes", "").strip(),
             "active": 1 if request.form.get("active") else 0,
         }

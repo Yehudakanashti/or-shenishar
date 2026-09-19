@@ -13,8 +13,8 @@
       <div class="field">
         <label for="line">קו מוצר</label>
         <select id="line" name="line">
-          <option value="memorial" {{ 'selected' if product and product.line == 'memorial' }}>זיכרון והנצחה</option>
-          <option value="gift" {{ 'selected' if product and product.line == 'gift' }}>מתנות</option>
+          <option value="holiday" {{ 'selected' if product and product.line == 'holiday' }}>חג ועונה</option>
+          <option value="gift" {{ 'selected' if product and product.line == 'gift' }}>מתנות כל השנה</option>
           <option value="other" {{ 'selected' if product and product.line == 'other' }}>אחר</option>
         </select>
       </div>
@@ -30,6 +30,13 @@
       <div class="field"><label for="lead_time">זמן ייצור</label><input type="text" id="lead_time" name="lead_time" value="{{ product.lead_time if product else '' }}" placeholder="מספר ימי עסקים"></div>
     </div>
     <p class="sub">המחיר נשמר לשימוש שלכם ולשיחות בפרטי. הבוט לעולם לא יכתוב אותו בתגובה ציבורית.</p>
+
+    <div class="row">
+      <div class="field"><label for="occasion">אירוע או עונה</label><input type="text" id="occasion" name="occasion" value="{{ product.occasion if product else '' }}" placeholder="חנוכה / סוכות / כל השנה"></div>
+      <div class="field"><label for="season_start">תחילת העונה</label><input type="text" id="season_start" name="season_start" value="{{ product.season_start if product else '' }}" placeholder="2026-12-04"></div>
+      <div class="field"><label for="season_end">סוף העונה</label><input type="text" id="season_end" name="season_end" value="{{ product.season_end if product else '' }}" placeholder="2026-12-14"></div>
+    </div>
+    <p class="sub">תאריכים בפורמט YYYY-MM-DD. מוצר בעונה מקבל עדיפות בהתאמה, ומוצר שהעונה שלו עברה לא יוצע. אפשר להשאיר ריק למוצר של כל השנה.</p>
 
     <div class="field"><label for="shipping">משלוח</label><input type="text" id="shipping" name="shipping" value="{{ product.shipping if product else '' }}"></div>
     <div class="field"><label for="customization">אפשרויות התאמה אישית</label><textarea id="customization" name="customization">{{ product.customization if product else '' }}</textarea></div>

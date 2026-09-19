@@ -17,6 +17,19 @@
   </div>
 
   <div class="card">
+    <h2>זהות העסק</h2>
+    <p class="sub">שתי השורות האלה נכנסות ישירות לפרומפט של הבוט. ככל שהתיאור מדויק, כך הניסוחים מדויקים.</p>
+    <div class="row">
+      <div class="field"><label for="business_name">שם העסק</label><input type="text" id="business_name" name="business_name" value="{{ settings.business_name }}"></div>
+      <div class="field"><label for="business_site">אתר או קישור</label><input type="text" id="business_site" name="business_site" value="{{ settings.business_site }}"></div>
+    </div>
+    <div class="field">
+      <label for="business_what">מה אתם עושים, במשפט</label>
+      <input type="text" id="business_what" name="business_what" value="{{ settings.business_what }}" placeholder="למשל: מוצרים מודפסים בתלת־ממד לחגים — חנוכיות, קישוטי סוכה ומתנות">
+    </div>
+  </div>
+
+  <div class="card">
     <h2>בולמי נזק</h2>
     <p class="sub">הגבולות שמונעים מהבוט להיראות כמו ספאם.</p>
     <div class="row">

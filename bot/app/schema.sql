@@ -22,6 +22,9 @@ CREATE TABLE IF NOT EXISTS products (
   customization TEXT NOT NULL DEFAULT '',
   order_url     TEXT NOT NULL DEFAULT '',
   keywords      TEXT NOT NULL DEFAULT '[]',
+  occasion      TEXT NOT NULL DEFAULT '',
+  season_start  TEXT NOT NULL DEFAULT '',
+  season_end    TEXT NOT NULL DEFAULT '',
   notes         TEXT NOT NULL DEFAULT '',
   active        INTEGER NOT NULL DEFAULT 1,
   created_at    TEXT NOT NULL DEFAULT (datetime('now'))

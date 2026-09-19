@@ -5,7 +5,9 @@ from datetime import datetime, timedelta
 from typing import Any, Iterable
 from zoneinfo import ZoneInfo
 
-from .config import DATA_DIR, DB_PATH, DEFAULT_SETTINGS, SCHEMA_PATH, TIMEZONE, UPLOAD_DIR
+from .config import (
+    BUSINESS_DEFAULTS, DATA_DIR, DB_PATH, DEFAULT_SETTINGS, SCHEMA_PATH, TIMEZONE, UPLOAD_DIR,
+)
 
 
 def connect() -> sqlite3.Connection:
@@ -16,11 +18,28 @@ def connect() -> sqlite3.Connection:
     return conn
 
 
+# עמודות שנוספו אחרי הגרסה הראשונה — מתווספות למסד קיים בלי למחוק נתונים
+MIGRATIONS = {
+    "products": {"occasion": "TEXT NOT NULL DEFAULT \'\'",
+                 "season_start": "TEXT NOT NULL DEFAULT \'\'",
+                 "season_end": "TEXT NOT NULL DEFAULT \'\'"},
+}
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    for table, columns in MIGRATIONS.items():
+        existing = {r["name"] for r in conn.execute(f"PRAGMA table_info({table})")}
+        for column, ddl in columns.items():
+            if column not in existing:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}")
+
+
 def init_db() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     with connect() as conn:
         conn.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
+        _migrate(conn)
         for key, value in DEFAULT_SETTINGS.items():
             conn.execute(
                 "INSERT INTO settings(key, value) VALUES(?, ?) ON CONFLICT(key) DO NOTHING",
@@ -37,6 +56,12 @@ def now_local() -> datetime:
 def get_settings() -> dict[str, str]:
     with connect() as conn:
         return {r["key"]: r["value"] for r in conn.execute("SELECT key, value FROM settings")}
+
+
+def business() -> dict[str, str]:
+    """זהות העסק כפי שנערכה בהגדרות — מזינה את הפרומפט ואת כותרת הממשק."""
+    current = get_settings()
+    return {key: (current.get(key) or default) for key, default in BUSINESS_DEFAULTS.items()}
 
 
 def get_setting(key: str, default: str = "") -> str:
@@ -131,7 +156,7 @@ def upsert_product(data: dict[str, Any], product_id: int | None = None) -> int:
     fields = (
         "slug", "name", "line", "tagline", "description", "audience", "price_from",
         "price_to", "lead_time", "shipping", "customization", "order_url", "keywords",
-        "notes", "active",
+        "occasion", "season_start", "season_end", "notes", "active",
     )
     payload = {k: data.get(k) for k in fields}
     payload["keywords"] = json.dumps(data.get("keywords") or [], ensure_ascii=False)

@@ -1,5 +1,6 @@
-"""התאמת מוצר לפוסט לפי מילות מפתח. משמש כגיבוי ל-AI וכבדיקה שלו."""
+"""התאמת מוצר לפוסט לפי מילות מפתח ולפי העונה. משמש כגיבוי ל-AI וכבדיקה שלו."""
 import re
+from datetime import date, timedelta
 from typing import Any
 
 PUNCT_RE = re.compile(r"[^\w֐-׿ ]+")
@@ -12,6 +13,26 @@ def normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().lower()
 
 
+def season_state(product: dict[str, Any], today: date | None = None, lead_days: int = 21) -> str:
+    """מחזיר: active (העונה עכשיו), soon (מתקרבת), far (רחוקה), past (עברה), always (בלי תאריכים)."""
+    start_raw, end_raw = (product.get("season_start") or ""), (product.get("season_end") or "")
+    if not start_raw and not end_raw:
+        return "always"
+    today = today or date.today()
+    try:
+        start = date.fromisoformat(start_raw) if start_raw else None
+        end = date.fromisoformat(end_raw) if end_raw else None
+    except ValueError:
+        return "always"
+    if end and today > end:
+        return "past"
+    if start and today < start - timedelta(days=lead_days):
+        return "far"
+    if start and today < start:
+        return "soon"
+    return "active"
+
+
 def score_product(post_text: str, product: dict[str, Any]) -> float:
     haystack = normalize(post_text)
     if not haystack:
@@ -21,10 +42,17 @@ def score_product(post_text: str, product: dict[str, Any]) -> float:
         needle = normalize(str(keyword))
         if needle and needle in haystack:
             score += 1.0 + 0.25 * len(needle.split())
-    for field in ("name", "audience", "tagline"):
+    for field in ("name", "audience", "tagline", "occasion"):
         for word in normalize(product.get(field, "")).split():
             if len(word) > 3 and word in haystack:
                 score += 0.35
+    state = season_state(product)
+    if state == "active":
+        score += 1.5
+    elif state == "soon":
+        score += 1.2
+    elif state == "past":
+        score -= 1.0
     return round(score, 3)
 
 
