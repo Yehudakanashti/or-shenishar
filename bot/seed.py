@@ -1,77 +1,167 @@
-"""יוצר שלדים למוצרי החגים עם חלונות העונה הנכונים.
-
-זה לא ממלא תוכן — השמות, התיאורים, המחירים והתמונות נכנסים מהממשק.
-המוצרים נוצרים כבויים, כדי שהבוט לא יציע מוצר שעדיין אין עליו מידע.
+"""טוען את קטלוג מוצרי החגים ואת התמונות מתוך assets/products.
 
 הרצה:  python seed.py
+אפשר להריץ שוב — הוא מעדכן לפי slug ולא יוצר כפילויות.
 """
+import shutil
 import sys
+from pathlib import Path
 
-from app.db import get_product_by_slug, init_db, log_event, upsert_product
+from app.config import BASE_DIR, UPLOAD_DIR
+from app.db import add_image, connect, get_product_by_slug, init_db, log_event, upsert_product
 
-# תאריכי החגים תשפ״ז
-DRAFTS = [
+ASSETS = BASE_DIR / "assets" / "products"
+
+# מה שחסר ויש להשלים בממשק לפני שיוצאים לדרך
+TODO = "להשלים: מחיר, מידות, סוג התאורה (סוללות/USB), זמן אספקה ומשלוח."
+
+SHARED = {
+    "line": "holiday",
+    "occasion": "סוכות",
+    "season_start": "2026-09-25",
+    "season_end": "2026-10-02",
+    "lead_time": "",
+    "shipping": "",
+    "active": 1,
+}
+
+LIGHTING = (
+    "מודפס בתלת־ממד מחומר לבן שקוף למחצה, ומואר מבפנים בתאורת LED שמחליפה צבעים — "
+    "הכיתוב והסמלים נדלקים יחד עם הגוף. בלי אש, אפשר להשאיר דולק."
+)
+
+PRODUCTS = [
     {
-        "slug": "sukkot",
-        "name": "מוצרי סוכות",
-        "occasion": "סוכות",
-        "season_start": "2026-09-25",
-        "season_end": "2026-10-02",
+        "slug": "sukkah-lamp",
+        "name": "סוכה מוארת",
+        "tagline": "סוכה קטנה שנדלקת על השולחן, עם גג סכך וכיתובי החג.",
+        "description": (
+            "קובייה בצורת סוכה עם גג סכך מודפס, דפנות עם חלון ושורת קישוטים תלויים, "
+            "וסמלי החג — לולב ואתרוג, ענבים, רימון ומגן דוד.\n\n" + LIGHTING + "\n\n"
+            "הכיתובים על הדפנות: ״בסוכות תשבו שבעת ימים״, ״ושמחת בחגך״, "
+            "״ופרוש עלינו סוכת שלומך״, ״זמן שמחתנו״, ועל דופן אחת שמות האושפיזין — "
+            "אברהם, יצחק, יעקב, משה, אהרן, יוסף ודוד."
+        ),
+        "audience": "קישוט לשולחן בסוכה, מתנה לחג, מתנה למארחים, מתנה לגננת או למורה",
+        "customization": "",
         "keywords": [
-            "קישוט לסוכה", "קישוטים לסוכה", "סוכה", "מה תולים בסוכה", "רעיונות לסוכה",
-            "אושפיזין", "נוי סוכה", "שרשרת לסוכה", "מתנה לחג", "חג סוכות",
+            "קישוט לסוכה", "קישוטים לסוכה", "נוי סוכה", "מה תולים בסוכה", "רעיונות לסוכה",
+            "אושפיזין", "סוכה", "מתנה למארחים", "מתנה לחג", "עיצוב שולחן חג",
+            "מנורה לסוכה", "תאורה לסוכה", "משהו מיוחד לסוכה",
+        ],
+        "images": [
+            ("sukkah-green.jpg", "הסוכה המוארת — ״ושמחת בחגך, ופרוש עלינו סוכת שלומך״", True),
+            ("sukkah-ushpizin.jpg", "דופן האושפיזין — אברהם יצחק יעקב משה, אהרן יוסף דוד", False),
+            ("sukkah-roof.jpg", "גג הסכך המודפס", False),
+            ("trio-lit.jpg", "שלושת הפריטים יחד", False),
         ],
     },
     {
-        "slug": "hanukkah",
-        "name": "מוצרי חנוכה",
-        "occasion": "חנוכה",
-        "season_start": "2026-12-04",
-        "season_end": "2026-12-12",
+        "slug": "etrog-lamp",
+        "name": "אתרוג מואר",
+        "tagline": "אתרוג שיושב בתוך עלים ונדלק מבפנים.",
+        "description": (
+            "גוף בצורת אתרוג על בסיס עלים פתוחים.\n\n" + LIGHTING + "\n\n"
+            "הכיתובים: ״חג סוכות שמח״, ״זמן שמחתנו״, ״ולקחתם לכם ביום הראשון״."
+        ),
+        "audience": "קישוט לשולחן החג, מתנה קטנה לחג, מתנה לאירוח",
+        "customization": "",
         "keywords": [
-            "חנוכייה", "חנוכיה", "מתנה לחנוכה", "מתנות לחנוכה", "סביבון", "נרות חנוכה",
-            "מסיבת חנוכה", "מתנה לגננת", "מתנה למורה", "מתנות לילדים בחנוכה", "חג החנוכה",
+            "אתרוג", "ארבעת המינים", "קישוט לסוכה", "מתנה לחג", "מתנה קטנה לחג",
+            "עיצוב שולחן חג", "נוי סוכה", "סוכות",
         ],
+        "images": [
+            ("etrog-lit.jpg", "האתרוג המואר", True),
+            ("trio-colors.jpg", "בצבעים משתנים, לצד שאר הפריטים", False),
+        ],
+    },
+    {
+        "slug": "pomegranate-lamp",
+        "name": "רימון מואר",
+        "tagline": "רימון עם כתר, מואר מבפנים, עם ברכות החג מסביב.",
+        "description": (
+            "גוף רימון עגול עם כתר, על בסיס.\n\n" + LIGHTING + "\n\n"
+            "הכיתובים מסביב: ״חג סוכות שמח״, ״בסוכות תשבו שבעת ימים״, ״ושמחת בחגך״, "
+            "״מועדים לשמחה״, ושמות האושפיזין."
+        ),
+        "audience": "קישוט לשולחן החג, מתנה לחג, מתנה לראש השנה ולסוכות",
+        "customization": "",
+        "keywords": [
+            "רימון", "קישוט לסוכה", "מתנה לחג", "שנה טובה", "מתנה לראש השנה",
+            "נוי סוכה", "עיצוב שולחן חג", "סוכות",
+        ],
+        "images": [
+            ("trio-lit.jpg", "הרימון מימין, מואר", True),
+            ("trio-colors.jpg", "הרימון בצבע חם", False),
+        ],
+    },
+    {
+        "slug": "sukkot-plaque",
+        "name": "שלט ״חג סוכות שמח״",
+        "tagline": "שלט עומד קטן עם ברכת החג.",
+        "description": (
+            "שלט עומד עם הכיתוב ״חג סוכות שמח״ ו״מועדים לשמחה״, "
+            "וסמלי אתרוג וסוכה בחלק העליון.\n\n" + LIGHTING
+        ),
+        "audience": "מתנה קטנה לחג, שי לעובדים, קישוט לשולחן",
+        "customization": "",
+        "keywords": [
+            "שלט לסוכה", "ברכה לחג", "שי לעובדים", "מתנה קטנה לחג", "מתנות לחג לעובדים",
+            "קישוט לסוכה", "סוכות",
+        ],
+        "images": [("plaque.jpg", "השלט העומד", True)],
     },
 ]
 
-PLACEHOLDER = "השלימו כאן: מה המוצר, למי הוא מתאים, וכל מה שחשוב שהבוט יֵדע."
+
+def install_images(product_id: int, images: list[tuple[str, str, bool]]) -> int:
+    with connect() as conn:
+        conn.execute("DELETE FROM product_images WHERE product_id = ?", (product_id,))
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    added = 0
+    for filename, caption, primary in images:
+        source = ASSETS / filename
+        if not source.exists():
+            print(f"    ! חסרה תמונה: {filename}")
+            continue
+        target = f"{product_id}-{filename}"
+        shutil.copy(source, UPLOAD_DIR / target)
+        add_image(product_id, target, caption, primary)
+        added += 1
+    return added
 
 
 def main() -> int:
     init_db()
-    for draft in DRAFTS:
-        existing = get_product_by_slug(draft["slug"])
-        if existing:
-            print(f"  · {draft['name']} כבר קיים — לא נגעתי")
-            continue
-        upsert_product(
-            {
-                "slug": draft["slug"],
-                "name": draft["name"],
-                "line": "holiday",
-                "tagline": "",
-                "description": PLACEHOLDER,
-                "audience": "",
-                "price_from": None,
-                "price_to": None,
-                "lead_time": "",
-                "shipping": "",
-                "customization": "",
-                "order_url": "",
-                "keywords": draft["keywords"],
-                "occasion": draft["occasion"],
-                "season_start": draft["season_start"],
-                "season_end": draft["season_end"],
-                "notes": "",
-                "active": 0,
-            }
-        )
-        print(f"  ✓ {draft['name']} — עונה {draft['season_start']} עד {draft['season_end']} (כבוי עד שתמלאו)")
+    if not ASSETS.exists():
+        print(f"לא נמצאה התיקייה {ASSETS}")
+        return 1
 
-    log_event("seed", "נוצרו שלדי מוצרי חגים")
-    print("\nהמוצרים נוצרו כבויים. פתחו את מסך המוצרים, מלאו תיאור ומחירים,")
-    print("העלו תמונות, וסמנו ״מוצר פעיל״ — רק אז הבוט יתחיל להציע אותם.")
+    for spec in PRODUCTS:
+        existing = get_product_by_slug(spec["slug"])
+        product_id = upsert_product(
+            {
+                **SHARED,
+                "slug": spec["slug"],
+                "name": spec["name"],
+                "tagline": spec["tagline"],
+                "description": spec["description"],
+                "audience": spec["audience"],
+                "customization": spec["customization"],
+                "price_from": existing["price_from"] if existing else None,
+                "price_to": existing["price_to"] if existing else None,
+                "order_url": existing["order_url"] if existing else "",
+                "keywords": spec["keywords"],
+                "notes": TODO,
+            },
+            existing["id"] if existing else None,
+        )
+        count = install_images(product_id, spec["images"])
+        print(f"  ✓ {spec['name']:22} {count} תמונות")
+
+    log_event("seed", f"נטענו {len(PRODUCTS)} מוצרי סוכות עם תמונות")
+    print("\nהקטלוג נטען. מה שחסר ומופיע בהערות של כל מוצר:")
+    print(f"  {TODO}")
     return 0
 
 

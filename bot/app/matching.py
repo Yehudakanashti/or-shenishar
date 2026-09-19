@@ -33,6 +33,10 @@ def season_state(product: dict[str, Any], today: date | None = None, lead_days: 
     return "active"
 
 
+# ניקוד מינימלי כדי להחשיב מוצר כמתאים — מונע התאמה על סמך מילה אקראית
+MIN_SCORE = 0.8
+
+
 def score_product(post_text: str, product: dict[str, Any]) -> float:
     haystack = normalize(post_text)
     if not haystack:
@@ -47,12 +51,11 @@ def score_product(post_text: str, product: dict[str, Any]) -> float:
             if len(word) > 3 and word in haystack:
                 score += 0.35
     state = season_state(product)
-    if state == "active":
-        score += 1.5
-    elif state == "soon":
-        score += 1.2
-    elif state == "past":
-        score -= 1.0
+    if state == "past":
+        return 0.0  # מוצר שהעונה שלו נגמרה לא מוצע, גם אם הטקסט מתאים
+    if score <= 0:
+        return 0.0  # עונה פעילה לבדה אינה סיבה להתאים מוצר לפוסט
+    score += {"active": 1.5, "soon": 1.2}.get(state, 0.0)
     return round(score, 3)
 
 
@@ -62,7 +65,8 @@ def rank_products(post_text: str, products: list[dict[str, Any]]) -> list[tuple[
 
 
 def best_product(post_text: str, products: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """המוצר המתאים ביותר, או None אם אף אחד לא באמת מתאים."""
     ranked = rank_products(post_text, products)
-    if ranked and ranked[0][1] > 0:
+    if ranked and ranked[0][1] >= MIN_SCORE:
         return ranked[0][0]
-    return ranked[0][0] if ranked else None
+    return None
