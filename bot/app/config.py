@@ -17,7 +17,9 @@ CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-5").strip() or "claude-opu
 
 FB_PAGE_ID = os.getenv("FB_PAGE_ID", "").strip()
 FB_PAGE_TOKEN = os.getenv("FB_PAGE_TOKEN", "").strip()
-FB_API_VERSION = os.getenv("FB_API_VERSION", "v21.0").strip()
+FB_APP_ID = os.getenv("FB_APP_ID", "").strip()
+FB_APP_SECRET = os.getenv("FB_APP_SECRET", "").strip()
+FB_API_VERSION = os.getenv("FB_API_VERSION", "v25.0").strip()
 
 HOST = os.getenv("BOT_HOST", "127.0.0.1").strip()
 PORT = int(os.getenv("BOT_PORT", "5000"))
@@ -28,8 +30,8 @@ MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
 # ברירת מחדל בלבד — הערכים האמיתיים נערכים במסך ההגדרות ונשמרים במסד
 BUSINESS_DEFAULTS = {
-    "business_name": "אור שנשאר",
-    "business_what": "",
+    "business_name": "מתנות לכל גיל",
+    "business_what": "מוצרי חג מודפסים בתלת־ממד, מוארים מבפנים, עם כיתוב שנקבע לפי ההזמנה",
     "business_site": "",
 }
 
