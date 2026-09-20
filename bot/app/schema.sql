@@ -107,3 +107,21 @@ CREATE INDEX IF NOT EXISTS idx_suggestions_post    ON suggestions(post_id);
 CREATE INDEX IF NOT EXISTS idx_posts_author        ON posts(author_name, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_images_product      ON product_images(product_id, is_primary DESC);
 CREATE INDEX IF NOT EXISTS idx_events_created      ON events(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS scheduled_posts (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  product_id    INTEGER REFERENCES products(id) ON DELETE SET NULL,
+  image_id      INTEGER REFERENCES product_images(id) ON DELETE SET NULL,
+  angle         TEXT NOT NULL DEFAULT '',
+  text          TEXT NOT NULL DEFAULT '',
+  scheduled_for TEXT NOT NULL DEFAULT '',
+  status        TEXT NOT NULL DEFAULT 'draft',
+  fb_post_id    TEXT NOT NULL DEFAULT '',
+  error         TEXT NOT NULL DEFAULT '',
+  engine        TEXT NOT NULL DEFAULT '',
+  policy_notes  TEXT NOT NULL DEFAULT '[]',
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  published_at  TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_posts_status ON scheduled_posts(status, scheduled_for);

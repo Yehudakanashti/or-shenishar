@@ -238,3 +238,98 @@ def analyze(text: str, group_name: str, author_name: str, products: list[dict[st
 
 def analysis_to_dict(analysis: Analysis) -> dict[str, Any]:
     return json.loads(analysis.model_dump_json())
+
+
+# ---------- ניסוח פוסטים לדף ----------
+
+POST_ANGLES = {
+    "showcase": "הצגת המוצר — מה זה, ואיך הוא נראה כשהוא דולק",
+    "countdown": "ספירה לאחור לחג — כמה זמן נשאר להספיק להזמין",
+    "personal": "ההתאמה האישית — שהכיתוב נקבע לפי ההזמנה",
+    "behind": "מאחורי הקלעים — איך הפריט נוצר",
+    "question": "שאלה לקהל שמזמינה תגובות",
+}
+
+POST_RULES = """אתה כותב פוסט לדף הפייסבוק של עסק קטן בישראל בשם "{name}".{what}
+
+הפוסט מיועד לדף העסקי — לא לקבוצה ולא לתגובה. בעל העסק יקרא ויאשר לפני פרסום.
+
+## איך נשמע פוסט טוב
+- שלוש עד שש שורות. לא מאמר.
+- פותח במשפט שעוצר את הגלילה, בלי קלישאות ובלי "מתרגשים להציג".
+- כתוב כמו אדם שמספר על משהו שהוא עשה, לא כמו פרסומת.
+- לכל היותר שני אימוג'ים בכל הפוסט.
+- קריאה לפעולה אחת בסוף, רכה: להזמנה או לפרטים — בהודעה.
+- בלי סולמיות אלא אם הן באמת מוסיפות, ואז שתיים לכל היותר.
+
+## כללי ברזל
+1. אל תמציא עובדות על המוצר. מה שלא כתוב בקטלוג — לא קיים.
+2. אם למוצר רשום ״אסור להזכיר״ — אל תזכיר את זה בשום צורה. הוראה קשיחה.
+3. בלי הבטחות על זמני אספקה או משלוח.
+4. {price_rule}
+5. עברית יומיומית ותקנית.
+
+## הזווית לפוסט הזה
+{angle}
+"""
+
+
+class PostDraft(BaseModel):
+    text: str
+    reasoning: str
+
+
+def draft_post(product: dict[str, Any], angle_key: str, extra_note: str = "") -> tuple[PostDraft, dict[str, Any]]:
+    angle = POST_ANGLES.get(angle_key, POST_ANGLES["showcase"])
+    identity = db.business()
+    allow_price = db.setting_bool("allow_price_in_post")
+    price_rule = (
+        "מותר לציין מחיר בפוסט הזה." if allow_price
+        else "אסור לציין מחיר. מי שישאל יקבל תשובה בהודעה פרטית."
+    )
+    what = f" {identity['business_what'].strip()}" if identity["business_what"].strip() else ""
+    system = POST_RULES.format(
+        name=identity["business_name"], what=what, price_rule=price_rule, angle=angle
+    )
+    system += "\n\n" + _catalog_block([product])
+
+    examples = db.list_examples("post", limit=5)
+    if examples:
+        system += "\n\n## פוסטים קודמים שאושרו — חקה את הטון\n" + "\n\n".join(
+            e["text"] for e in reversed(examples)
+        )
+
+    season = season_state(product)
+    context = [f"המוצר: {product['name']}", f"מצב העונה: {season}"]
+    if product.get("season_end"):
+        context.append(f"החג מסתיים בתאריך {product['season_end']}")
+    if extra_note.strip():
+        context.append(f"הנחיה מבעל העסק: {extra_note.strip()}")
+    user = "\n".join(context) + "\n\nכתוב את הפוסט."
+
+    if not ai_enabled():
+        return (
+            PostDraft(
+                text=f"{product['tagline']}\n\n{product['name']} — מוכן להזמנה.\nלפרטים, שלחו הודעה.",
+                reasoning="נוסח תבניתי — אין מפתח Claude מוגדר.",
+            ),
+            {"engine": "template"},
+        )
+
+    import anthropic
+
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    kwargs: dict[str, Any] = {
+        "model": CLAUDE_MODEL,
+        "max_tokens": 3000,
+        "system": [{"type": "text", "text": system}],
+        "messages": [{"role": "user", "content": user}],
+        "output_format": PostDraft,
+    }
+    try:
+        response = client.messages.parse(thinking={"type": "adaptive"}, **kwargs)
+    except anthropic.BadRequestError as exc:
+        db.log_event("ai_retry", "ניסיון חוזר בלי thinking (פוסט)", {"error": str(exc)[:400]})
+        response = client.messages.parse(**kwargs)
+
+    return response.parsed_output, {"engine": CLAUDE_MODEL}

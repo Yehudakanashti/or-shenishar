@@ -406,3 +406,94 @@ def add_block(kind: str, value: str, note: str = "") -> None:
 def delete_block(block_id: int) -> None:
     with connect() as conn:
         conn.execute("DELETE FROM blocklist WHERE id = ?", (block_id,))
+
+
+# ---------- פוסטים מתוזמנים ----------
+
+def _hydrate_post(conn: sqlite3.Connection, row: sqlite3.Row) -> dict[str, Any]:
+    item = dict(row)
+    item["policy_notes"] = json.loads(item["policy_notes"] or "[]")
+    item["product"] = None
+    if item["product_id"]:
+        product = conn.execute("SELECT * FROM products WHERE id = ?", (item["product_id"],)).fetchone()
+        if product:
+            item["product"] = dict(product)
+    item["image"] = None
+    if item["image_id"]:
+        image = conn.execute("SELECT * FROM product_images WHERE id = ?", (item["image_id"],)).fetchone()
+        if image:
+            item["image"] = dict(image)
+    return item
+
+
+def insert_scheduled_post(data: dict[str, Any]) -> int:
+    fields = ("product_id", "image_id", "angle", "text", "scheduled_for", "status", "engine", "policy_notes")
+    payload = {k: data.get(k) for k in fields}
+    payload["policy_notes"] = json.dumps(data.get("policy_notes") or [], ensure_ascii=False)
+    cols = ", ".join(fields)
+    marks = ", ".join(f":{k}" for k in fields)
+    with connect() as conn:
+        cur = conn.execute(f"INSERT INTO scheduled_posts({cols}) VALUES({marks})", payload)
+        return int(cur.lastrowid)
+
+
+def list_scheduled_posts(status: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
+    sql = "SELECT * FROM scheduled_posts"
+    params: list[Any] = []
+    if status:
+        sql += " WHERE status = ?"
+        params.append(status)
+    sql += " ORDER BY (scheduled_for = ''), scheduled_for, id DESC LIMIT ?"
+    params.append(limit)
+    with connect() as conn:
+        return [_hydrate_post(conn, r) for r in conn.execute(sql, params).fetchall()]
+
+
+def get_scheduled_post(post_id: int) -> dict[str, Any] | None:
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM scheduled_posts WHERE id = ?", (post_id,)).fetchone()
+        return _hydrate_post(conn, row) if row else None
+
+
+def update_scheduled_post(post_id: int, **fields: Any) -> None:
+    if not fields:
+        return
+    allowed = {"product_id", "image_id", "text", "scheduled_for", "status", "fb_post_id", "error", "angle"}
+    updates = {k: v for k, v in fields.items() if k in allowed}
+    if not updates:
+        return
+    sets = ", ".join(f"{k} = :{k}" for k in updates)
+    with connect() as conn:
+        conn.execute(f"UPDATE scheduled_posts SET {sets} WHERE id = :id", {**updates, "id": post_id})
+
+
+def mark_post_published(post_id: int, fb_post_id: str) -> None:
+    with connect() as conn:
+        conn.execute(
+            "UPDATE scheduled_posts SET status = 'published', fb_post_id = ?, error = '', "
+            "published_at = datetime('now') WHERE id = ?",
+            (fb_post_id, post_id),
+        )
+
+
+def mark_post_failed(post_id: int, error: str) -> None:
+    with connect() as conn:
+        conn.execute(
+            "UPDATE scheduled_posts SET status = 'failed', error = ? WHERE id = ?", (error[:600], post_id)
+        )
+
+
+def delete_scheduled_post(post_id: int) -> None:
+    with connect() as conn:
+        conn.execute("DELETE FROM scheduled_posts WHERE id = ?", (post_id,))
+
+
+def due_posts(now_str: str) -> list[dict[str, Any]]:
+    """פוסטים מאושרים שהגיע זמנם."""
+    with connect() as conn:
+        rows = conn.execute(
+            "SELECT * FROM scheduled_posts WHERE status = 'approved' AND scheduled_for != '' "
+            "AND scheduled_for <= ? ORDER BY scheduled_for",
+            (now_str,),
+        ).fetchall()
+        return [_hydrate_post(conn, r) for r in rows]

@@ -89,3 +89,34 @@ def check_dm(text: str) -> tuple[str, list[str]]:
     if len(cleaned) > 500:
         notes.append("הודעת הפתיחה ארוכה מדי — כדאי לקצר")
     return cleaned, notes
+
+
+def check_post(text: str, allow_price: bool, max_chars: int = 900) -> tuple[str, list[str]]:
+    """פוסט בדף — כללים רכים יותר מתגובה: קישורים מותרים, אורך גדול יותר.
+
+    מחיר מותר רק אם הוגדר כך בהגדרות.
+    """
+    notes: list[str] = []
+    cleaned = (text or "").strip()
+
+    if not allow_price:
+        cleaned, removed = strip_prices(cleaned)
+        if removed:
+            notes.append("הוסר אזכור מחיר מהפוסט (אפשר לשנות בהגדרות)")
+
+    emojis = EMOJI_RE.findall(cleaned)
+    if len(emojis) > 3:
+        for extra in emojis[3:]:
+            cleaned = cleaned.replace(extra, "", 1)
+        notes.append("צומצמו אימוג\'ים בפוסט")
+
+    hype = [w for w in HYPE_WORDS if w in cleaned]
+    if hype:
+        notes.append("שפה שיווקית שכדאי לבדוק: " + ", ".join(hype))
+
+    if len(cleaned) > max_chars:
+        notes.append(f"הפוסט ארוך מ-{max_chars} תווים")
+
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
+    return cleaned, notes

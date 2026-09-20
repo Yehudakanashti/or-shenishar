@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}פוסטים לדף{% endblock %}
+{% block body %}
+
+<div class="card">
+  <h2>פוסט חדש לדף</h2>
+  <p class="sub">בוחרים מוצר וזווית, והבוט מנסח טיוטה. שום דבר לא מתפרסם לפני שאתם מאשרים.</p>
+  <form method="post" action="{{ url_for('post_create') }}">
+    <div class="row">
+      <div class="field">
+        <label for="product_id">מוצר</label>
+        <select id="product_id" name="product_id" required>
+          <option value="">— בחרו —</option>
+          {% for p in products %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="angle">זווית</label>
+        <select id="angle" name="angle">
+          {% for key, label in angles.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="scheduled_for">מתי לפרסם</label>
+        <input type="text" id="scheduled_for" name="scheduled_for" placeholder="{{ now }}">
+      </div>
+    </div>
+    <div class="field">
+      <label for="note">משהו שתרצו שייכנס לפוסט (אופציונלי)</label>
+      <input type="text" id="note" name="note" placeholder="למשל: להדגיש שנשארו ימים ספורים להזמנה">
+    </div>
+    <button class="btn primary" type="submit">נסח טיוטה</button>
+  </form>
+</div>
+
+{% if not posts %}
+  <div class="card empty">אין עדיין פוסטים.</div>
+{% endif %}
+
+{% for post in posts %}
+  <div class="item">
+    <div class="meta">
+      <span class="badge accent">#{{ post.id }}</span>
+      <span class="badge {{ {'published':'good','failed':'bad','approved':'accent'}.get(post.status,'') }}">
+        {% if post.status == 'draft' %}טיוטה
+        {% elif post.status == 'approved' %}מאושר, ממתין לזמן
+        {% elif post.status == 'published' %}פורסם
+        {% elif post.status == 'failed' %}נכשל
+        {% else %}{{ post.status }}{% endif %}
+      </span>
+      {% if post.product %}<span class="badge">{{ post.product.name }}</span>{% endif %}
+      {% if post.scheduled_for %}<span>· {{ post.scheduled_for }}</span>{% endif %}
+      {% if post.published_at %}<span>· פורסם {{ post.published_at }}</span>{% endif %}
+    </div>
+    <div style="display:flex; gap:12px; align-items:flex-start">
+      {% if post.image %}
+        <img src="{{ url_for('uploads', filename=post.image.filename) }}" alt=""
+             style="width:96px; height:96px; object-fit:cover; border-radius:10px; flex:none">
+      {% endif %}
+      <div class="draft" style="flex:1">{{ post.text }}</div>
+    </div>
+    {% if post.error %}<p class="sub" style="color:var(--bad); margin-top:8px">{{ post.error }}</p>{% endif %}
+    <div class="actions">
+      <a class="btn small" href="{{ url_for('post_edit', post_id=post.id) }}">פתח</a>
+    </div>
+  </div>
+{% endfor %}
+{% endblock %}

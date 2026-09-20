@@ -17,6 +17,7 @@
       <a href="{{ url_for('queue') }}" class="{{ 'on' if request.endpoint == 'queue' }}">
         תור אישורים{% if pending_count %} <span class="pill">{{ pending_count }}</span>{% endif %}
       </a>
+      <a href="{{ url_for('posts') }}" class="{{ 'on' if request.endpoint in ('posts','post_edit') }}">פוסטים</a>
       <a href="{{ url_for('products') }}" class="{{ 'on' if request.endpoint in ('products','product_edit','product_new') }}">מוצרים</a>
       <a href="{{ url_for('settings') }}" class="{{ 'on' if request.endpoint == 'settings' }}">הגדרות</a>
       <a href="{{ url_for('history') }}" class="{{ 'on' if request.endpoint == 'history' }}">היסטוריה</a>

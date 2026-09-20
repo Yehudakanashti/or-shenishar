@@ -7,7 +7,7 @@ from flask import (
     Flask, abort, flash, redirect, render_template, request, send_from_directory, url_for,
 )
 
-from . import ai, db, engine
+from . import ai, db, engine, policy, publisher
 from .config import (
     ALLOWED_IMAGE_EXT, CLAUDE_MODEL, DEFAULT_SETTINGS, MAX_IMAGE_BYTES,
     UPLOAD_DIR, ai_enabled, facebook_enabled,
@@ -178,6 +178,79 @@ def create_app() -> Flask:
     @app.get("/uploads/<path:filename>")
     def uploads(filename: str):
         return send_from_directory(UPLOAD_DIR, filename)
+
+    # ---------- פוסטים לדף ----------
+
+    @app.get("/posts")
+    def posts():
+        return render_template(
+            "posts.html",
+            posts=db.list_scheduled_posts(limit=80),
+            products=db.list_products(active_only=True),
+            angles=ai.POST_ANGLES,
+            now=db.now_local().strftime("%Y-%m-%d %H:%M"),
+        )
+
+    @app.post("/posts/create")
+    def post_create():
+        product_id = request.form.get("product_id", type=int)
+        if not product_id:
+            flash("צריך לבחור מוצר.", "warn")
+            return redirect(url_for("posts"))
+        result = publisher.create_draft(
+            product_id,
+            request.form.get("angle", "showcase"),
+            request.form.get("scheduled_for", "").strip(),
+            request.form.get("note", ""),
+        )
+        if not result["ok"]:
+            flash(f"{result['reason']} {result.get('detail', '')}", "warn")
+            return redirect(url_for("posts"))
+        return redirect(url_for("post_edit", post_id=result["post_id"]))
+
+    @app.get("/posts/<int:post_id>")
+    def post_edit(post_id: int):
+        post = db.get_scheduled_post(post_id)
+        if not post:
+            abort(404)
+        return render_template(
+            "post.html", post=post, products=db.list_products(), angles=ai.POST_ANGLES
+        )
+
+    @app.post("/posts/<int:post_id>/save")
+    def post_save(post_id: int):
+        text, notes = policy.check_post(
+            request.form.get("text", ""), db.setting_bool("allow_price_in_post")
+        )
+        db.update_scheduled_post(
+            post_id,
+            text=text,
+            image_id=request.form.get("image_id", type=int) or None,
+            scheduled_for=request.form.get("scheduled_for", "").strip(),
+        )
+        for note in notes:
+            flash(note, "warn")
+        flash("נשמר.", "ok")
+        return redirect(url_for("post_edit", post_id=post_id))
+
+    @app.post("/posts/<int:post_id>/approve")
+    def post_approve(post_id: int):
+        db.update_scheduled_post(post_id, status="approved")
+        db.log_event("post_approved", f"אושר פוסט #{post_id}")
+        flash("הפוסט אושר. הוא יפורסם בזמן שנקבע, או עכשיו בלחיצה על ״פרסם עכשיו״.", "ok")
+        return redirect(url_for("post_edit", post_id=post_id))
+
+    @app.post("/posts/<int:post_id>/publish")
+    def post_publish(post_id: int):
+        ok, message = publisher.publish(post_id)
+        flash(message, "ok" if ok else "warn")
+        return redirect(url_for("post_edit", post_id=post_id))
+
+    @app.post("/posts/<int:post_id>/delete")
+    def post_delete(post_id: int):
+        db.delete_scheduled_post(post_id)
+        flash("הפוסט נמחק.", "ok")
+        return redirect(url_for("posts"))
 
     # ---------- הגדרות ----------
 

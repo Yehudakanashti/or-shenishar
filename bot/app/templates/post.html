@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}פוסט #{{ post.id }}{% endblock %}
+{% block body %}
+
+<form method="post" action="{{ url_for('post_save', post_id=post.id) }}">
+  <div class="card">
+    <div class="meta" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px">
+      <span class="badge accent">#{{ post.id }}</span>
+      <span class="badge {{ {'published':'good','failed':'bad','approved':'accent'}.get(post.status,'') }}">
+        {% if post.status == 'draft' %}טיוטה
+        {% elif post.status == 'approved' %}מאושר
+        {% elif post.status == 'published' %}פורסם
+        {% elif post.status == 'failed' %}נכשל
+        {% else %}{{ post.status }}{% endif %}
+      </span>
+      {% if post.angle %}<span class="badge">{{ angles.get(post.angle, post.angle) }}</span>{% endif %}
+      <span class="mono">{{ post.engine }}</span>
+    </div>
+
+    <h2>הפוסט</h2>
+    <p class="sub">זה מה שיתפרסם בדף. ערכו כרצונכם.</p>
+    <textarea name="text" id="text" style="min-height:190px">{{ post.text }}</textarea>
+    <div class="actions"><button class="btn small" type="button" data-copy="#text">העתק</button></div>
+
+    {% if post.policy_notes %}
+      <ul class="notes">{% for note in post.policy_notes %}<li>{{ note }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    <hr>
+    <div class="row">
+      <div class="field">
+        <label for="image_id">תמונה מצורפת</label>
+        <select name="image_id" id="image_id">
+          <option value="">— בלי תמונה —</option>
+          {% for p in products %}{% for img in p.images %}
+            <option value="{{ img.id }}" {{ 'selected' if post.image_id == img.id }}>{{ p.name }} — {{ img.caption or img.filename[:10] }}</option>
+          {% endfor %}{% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="scheduled_for">מתי לפרסם</label>
+        <input type="text" id="scheduled_for" name="scheduled_for" value="{{ post.scheduled_for }}" placeholder="2026-09-21 19:30">
+      </div>
+    </div>
+
+    {% if post.image %}
+      <div class="thumbs"><div class="thumb is-primary">
+        <img src="{{ url_for('uploads', filename=post.image.filename) }}" alt="">
+      </div></div>
+    {% endif %}
+
+    <div class="actions" style="margin-top:16px">
+      <button class="btn primary" type="submit">שמור</button>
+    </div>
+  </div>
+</form>
+
+<div class="card">
+  <h2>פרסום</h2>
+  {% if not fb_on %}
+    <p class="sub">הדף עדיין לא מחובר. מלאו <span class="mono">FB_PAGE_ID</span> ו-<span class="mono">FB_PAGE_TOKEN</span> ב-<span class="mono">.env</span> — ראו SETUP-FACEBOOK.md.</p>
+  {% elif post.status == 'published' %}
+    <p class="sub">הפוסט פורסם{% if post.fb_post_id %} (מזהה <span class="mono">{{ post.fb_post_id }}</span>){% endif %}.</p>
+  {% else %}
+    <p class="sub">אישור מסמן את הפוסט לפרסום בזמן שנקבע. ״פרסם עכשיו״ מעלה אותו מיד.</p>
+  {% endif %}
+  <div class="actions">
+    {% if post.status in ('draft', 'failed') %}
+      <form method="post" action="{{ url_for('post_approve', post_id=post.id) }}">
+        <button class="btn primary" type="submit">אשר לפרסום</button>
+      </form>
+    {% endif %}
+    {% if post.status != 'published' and fb_on %}
+      <form method="post" action="{{ url_for('post_publish', post_id=post.id) }}">
+        <button class="btn" type="submit">פרסם עכשיו</button>
+      </form>
+    {% endif %}
+    <form method="post" action="{{ url_for('post_delete', post_id=post.id) }}">
+      <button class="btn danger" type="submit">מחק</button>
+    </form>
+  </div>
+  {% if post.error %}<p class="sub" style="color:var(--bad); margin-top:10px">{{ post.error }}</p>{% endif %}
+</div>
+
+<p><a href="{{ url_for('posts') }}">← חזרה לפוסטים</a></p>
+{% endblock %}
