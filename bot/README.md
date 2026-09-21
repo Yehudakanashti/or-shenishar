@@ -8,7 +8,7 @@
 
 ## התקנה
 
-צריך Python 3.11 ומעלה.
+צריך Python 3.11 ומעלה. **על ווינדוס — ראו [INSTALL-WINDOWS.md](INSTALL-WINDOWS.md).**
 
 ```bash
 cd bot

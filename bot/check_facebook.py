@@ -61,7 +61,8 @@ def main() -> int:
             print(f"{OK} תוקף הטוקן: {'לא פג' if not expires else f'פג ב-{expires}'}")
             scopes = data.get("scopes", [])
             print(f"     הרשאות: {', '.join(scopes) if scopes else 'לא דווחו'}")
-            needed = {"pages_manage_posts", "pages_read_engagement", "pages_manage_engagement"}
+            needed = {"pages_manage_posts", "pages_read_engagement",
+                      "pages_manage_engagement", "pages_manage_metadata"}
             missing = needed - set(scopes)
             if missing:
                 print(f"{WARN} חסרות הרשאות: {', '.join(sorted(missing))}")
