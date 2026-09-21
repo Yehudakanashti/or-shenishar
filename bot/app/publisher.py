@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Any
 
-from . import ai, db, facebook, policy
+from . import ai, db, facebook, policy, timing
 from .config import UPLOAD_DIR
 
 
@@ -65,10 +65,14 @@ def publish(post_id: int) -> tuple[bool, str]:
 
 
 def publish_due() -> list[tuple[int, bool, str]]:
-    """מפרסם כל פוסט מאושר שהגיע זמנו. מיועד להרצה מתוזמנת."""
-    now = db.now_local().strftime("%Y-%m-%d %H:%M")
+    """מפרסם כל פוסט מאושר שהגיע זמנו, חוץ משבת, חג וזמנים חסומים."""
+    moment = db.now_local()
+    blocked = timing.blocked_reason(moment)
+    if blocked:
+        return [(0, False, f"לא מפרסמים עכשיו — {blocked}. הפוסטים ימתינו.")]
+
     results = []
-    for post in db.due_posts(now):
+    for post in db.due_posts(moment.strftime("%Y-%m-%d %H:%M")):
         ok, message = publish(post["id"])
         results.append((post["id"], ok, message))
     return results

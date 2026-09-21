@@ -51,6 +51,15 @@
         <option value="neutral" {{ 'selected' if settings.address_form == 'neutral' }}>ניטרלי תמיד</option>
       </select>
     </div>
+    <hr>
+    <h2 style="font-size:15px">מתי לא מפרסמים</h2>
+    <p class="sub">שבת נחסמת אוטומטית — משישי ב-15:00 עד מוצאי שבת. פוסט שזמנו נופל בתוך חלון חסום נדחה ליום הפנוי הבא ולא מתפרסם באיחור.</p>
+    <div class="field">
+      <label for="blackout_dates">ימים טובים נוספים (שורה לכל אחד)</label>
+      <textarea id="blackout_dates" name="blackout_dates" placeholder="2026-09-26 יום טוב ראשון של סוכות&#10;2027-04-11..2027-04-12 פסח">{{ settings.blackout_dates }}</textarea>
+    </div>
+    <p class="sub">פורמט: <span class="mono">YYYY-MM-DD</span> או <span class="mono">YYYY-MM-DD..YYYY-MM-DD</span>, ואחריו תווית. חול המועד וחנוכה הם ימי עבודה — אין צורך לחסום אותם.</p>
+
     <button class="btn primary" type="submit">שמור הגדרות</button>
   </div>
 </form>

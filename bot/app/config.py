@@ -46,7 +46,8 @@ DEFAULT_SETTINGS = {
     "max_comment_chars": "320",
     "address_form": "auto",         # auto | feminine | masculine | neutral
     "allow_price_in_post": "0",      # מחיר בפוסט בדף (בתגובות — לעולם לא)
-    "season_lead_days": "21",       # כמה ימים לפני תחילת העונה מוצר נחשב רלוונטי
+    "season_lead_days": "21",
+    "blackout_dates": "",           # שבת נחסמת אוטומטית; כאן רק ימים טובים נוספים       # כמה ימים לפני תחילת העונה מוצר נחשב רלוונטי
     **BUSINESS_DEFAULTS,
 }
 
