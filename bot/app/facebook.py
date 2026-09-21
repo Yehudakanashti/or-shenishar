@@ -116,3 +116,38 @@ def private_reply(comment_id: str, message: str) -> dict[str, Any]:
         {"recipient": json.dumps({"comment_id": comment_id}), "message": json.dumps({"text": message})},
         method="POST",
     )
+
+
+# ---------- עיצוב הדף עצמו ----------
+
+def update_details(**fields: str) -> dict[str, Any]:
+    """מעדכן שדות בדף: about, description, website, emails, phone.
+
+    דורש את ההרשאה pages_manage_metadata.
+    """
+    payload = {k: v for k, v in fields.items() if v}
+    if not payload:
+        return {}
+    return _call(FB_PAGE_ID, payload, method="POST")
+
+
+def set_profile_picture(image_path: Path) -> dict[str, Any]:
+    """מעלה תמונת פרופיל חדשה לדף."""
+    return _multipart(f"{FB_PAGE_ID}/picture", {}, Path(image_path))
+
+
+def set_cover_photo(image_path: Path) -> dict[str, Any]:
+    """מעלה תמונת כיסוי: קודם מעלים כתמונה לא מפורסמת, ואז מצמידים לדף."""
+    uploaded = _multipart(f"{FB_PAGE_ID}/photos", {"published": "false"}, Path(image_path))
+    photo_id = uploaded.get("id")
+    if not photo_id:
+        raise RuntimeError(f"העלאת הכיסוי לא החזירה מזהה תמונה: {uploaded}")
+    return _call(FB_PAGE_ID, {"cover": photo_id}, method="POST")
+
+
+def get_details() -> dict[str, Any]:
+    """קורא את מצב הדף הנוכחי."""
+    return _call(FB_PAGE_ID, {
+        "fields": "id,name,username,about,description,category,fan_count,followers_count,link,"
+                  "picture{url},cover{source},is_published"
+    })
